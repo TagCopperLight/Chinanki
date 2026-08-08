@@ -73,7 +73,14 @@ export default function DeckListPage() {
           {error && <p className="text-sm text-red-600">{error}</p>}
           <div className="flex gap-2">
             <Button onClick={submit}>Create</Button>
-            <Button variant="secondary" onClick={() => setIsCreating(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setIsCreating(false);
+                setName('');
+                setError('');
+              }}
+            >
               Cancel
             </Button>
           </div>

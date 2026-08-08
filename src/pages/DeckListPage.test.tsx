@@ -56,4 +56,18 @@ describe('DeckListPage', () => {
     expect(await screen.findByText('Deck name is required')).toBeInTheDocument();
     expect(await db.decks.count()).toBe(0);
   });
+
+  it('clears the name and error when the create dialog is cancelled', async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole('button', { name: 'New deck' }));
+    await user.click(screen.getByRole('button', { name: 'Create' }));
+    expect(await screen.findByText('Deck name is required')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    await user.click(await screen.findByRole('button', { name: 'New deck' }));
+    expect(screen.queryByText('Deck name is required')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Deck name')).toHaveValue('');
+  });
 });

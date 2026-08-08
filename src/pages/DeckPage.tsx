@@ -34,7 +34,11 @@ export default function DeckPage() {
         title={deck.name}
         backTo="/"
         action={
-          <Link to={`/deck/${deckId}/settings`} className="min-h-11 px-2 py-2 text-xl" aria-label="Deck settings">
+          <Link
+            to={`/deck/${deckId}/settings`}
+            className="flex min-h-11 min-w-11 items-center justify-center px-2 py-2 text-xl"
+            aria-label="Deck settings"
+          >
             ⚙️
           </Link>
         }
