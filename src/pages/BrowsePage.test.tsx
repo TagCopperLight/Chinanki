@@ -57,7 +57,7 @@ describe('BrowsePage', () => {
   it('opens a note for editing', async () => {
     const user = userEvent.setup();
     renderPage();
-    await user.click(await screen.findByRole('button', { name: 'Edit 好' }));
+    await user.click(await screen.findByRole('button', { name: /^Edit 好/ }));
     expect(await screen.findByText('Note editor')).toBeInTheDocument();
   });
 
@@ -93,5 +93,46 @@ describe('BrowsePage', () => {
     renderPage();
     await user.type(await screen.findByRole('searchbox'), 'zzz');
     expect(await screen.findByText(/No matching words/)).toBeInTheDocument();
+  });
+
+  it('distinguishes heteronym row buttons by pinyin and meaning', async () => {
+    // Create two decks with notes sharing the same hanzi but different pinyin/meaning
+    // (duplicate hanzi within a deck is rejected, so we use separate decks)
+    const deck1 = await createDeck({ name: 'Deck 1', directions: ['hanzi-meaning'] });
+    const deck2 = await createDeck({ name: 'Deck 2', directions: ['hanzi-meaning'] });
+
+    // Create two heteronyms of 行 (xíng "to walk" vs háng "row")
+    await createNote({ deckId: deck1, hanzi: '行', pinyin: 'xíng', meaning: 'to walk' });
+    await createNote({ deckId: deck2, hanzi: '行', pinyin: 'háng', meaning: 'row' });
+
+    // Render Browse for deck1 and verify the first heteronym's accessible name
+    const { unmount: unmount1 } = render(
+      <MemoryRouter initialEntries={[`/deck/${deck1}/browse`]}>
+        <Routes>
+          <Route path="/deck/:deckId/browse" element={<BrowsePage />} />
+          <Route path="/note/:noteId" element={<p>Note editor</p>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const btn1 = await screen.findByRole('button', { name: /^Edit 行, xíng, to walk/ });
+    expect(btn1).toBeInTheDocument();
+
+    unmount1();
+
+    // Clear screen and render Browse for deck2
+    const { unmount: unmount2 } = render(
+      <MemoryRouter initialEntries={[`/deck/${deck2}/browse`]}>
+        <Routes>
+          <Route path="/deck/:deckId/browse" element={<BrowsePage />} />
+          <Route path="/note/:noteId" element={<p>Note editor</p>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const btn2 = await screen.findByRole('button', { name: /^Edit 行, háng, row/ });
+    expect(btn2).toBeInTheDocument();
+
+    unmount2();
   });
 });

@@ -74,6 +74,7 @@ export default function BrowsePage() {
           type="search"
           className={inputClass}
           placeholder="Search hanzi, pinyin or meaning"
+          aria-label="Search words"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
@@ -98,7 +99,7 @@ export default function BrowsePage() {
               <div className="flex items-center">
                 <button
                   type="button"
-                  aria-label={`Edit ${note.hanzi}`}
+                  aria-label={`Edit ${note.hanzi}, ${note.pinyin}, ${note.meaning}`}
                   onClick={() => navigate(`/note/${note.id}`)}
                   className="flex flex-1 items-baseline gap-3 px-4 py-3 text-left"
                 >
