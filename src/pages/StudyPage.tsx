@@ -1,3 +1,179 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
+import { StudySession } from '@/lib/study';
+import { answerFor, promptFor, type NoteField } from '@/lib/study/prompt';
+import { DIRECTION_LABELS } from '@/lib/db/types';
+import type { Rating } from '@/lib/fsrs';
+import type { QueueItem } from '@/lib/study';
+import Button from '@/components/Button';
+import HanziText from '@/components/HanziText';
+import PinyinText from '@/components/PinyinText';
+import RatingButtons from '@/components/RatingButtons';
+
+function FieldView({ field, item, large }: { field: NoteField; item: QueueItem; large: boolean }) {
+  const { note } = item;
+  const size = large ? 'text-5xl' : 'text-2xl';
+  if (field === 'hanzi') {
+    return <HanziText hanzi={note.hanzi} pinyin={note.pinyin} className={`${size} leading-tight`} />;
+  }
+  if (field === 'pinyin') {
+    return <PinyinText pinyin={note.pinyin} className={large ? 'text-4xl' : 'text-xl'} />;
+  }
+  return <span className={large ? 'text-3xl' : 'text-xl'}>{note.meaning}</span>;
+}
+
 export default function StudyPage() {
-  return <h1 className="p-4 text-2xl font-bold">Study</h1>;
+  const { deckId: param } = useParams();
+  const deckId = Number(param);
+  const navigate = useNavigate();
+
+  const [session, setSession] = useState<StudySession | null>(null);
+  const [item, setItem] = useState<QueueItem | null>(null);
+  const [revealed, setRevealed] = useState(false);
+  const [tick, setTick] = useState(0);
+  const shownAt = useRef(Date.now());
+
+  useEffect(() => {
+    void (async () => {
+      const started = await StudySession.start(deckId, Date.now());
+      setSession(started);
+      setItem(started.current);
+      shownAt.current = Date.now();
+    })();
+  }, [deckId]);
+
+  const rate = useCallback(
+    async (rating: Rating) => {
+      if (!session) return;
+      await session.answer(rating, Date.now(), Date.now() - shownAt.current);
+      setItem(session.current);
+      setRevealed(false);
+      shownAt.current = Date.now();
+      setTick((value) => value + 1);
+    },
+    [session],
+  );
+
+  const undo = useCallback(async () => {
+    if (!session) return;
+    await session.undo();
+    setItem(session.current);
+    setRevealed(false);
+    shownAt.current = Date.now();
+    setTick((value) => value + 1);
+  }, [session]);
+
+  // Keyboard shortcuts make desktop review fast; the buttons stay the mobile path.
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key === ' ' || event.key === 'Enter') {
+        event.preventDefault();
+        if (revealed) void rate(3);
+        else setRevealed(true);
+      } else if (revealed && ['1', '2', '3', '4'].includes(event.key)) {
+        void rate(Number(event.key) as Rating);
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [revealed, rate]);
+
+  if (!session) return null;
+
+  if (!item) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+        <p className="text-2xl font-bold">All done 🎉</p>
+        <p className="text-sm text-slate-500">
+          {session.counts.answered} card{session.counts.answered === 1 ? '' : 's'} reviewed.
+        </p>
+        <div className="flex gap-2">
+          {session.counts.answered > 0 && (
+            <Button variant="secondary" onClick={undo}>
+              Undo
+            </Button>
+          )}
+          <Button onClick={() => navigate(`/deck/${deckId}`)}>Back to deck</Button>
+        </div>
+      </div>
+    );
+  }
+
+  const counts = session.counts;
+  const now = Date.now();
+
+  return (
+    <div className="flex h-full flex-col">
+      <header className="flex items-center gap-3 px-4 py-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] text-sm">
+        <button
+          type="button"
+          aria-label="Close"
+          onClick={() => navigate(`/deck/${deckId}`)}
+          className="min-h-11 min-w-11 text-xl text-slate-500"
+        >
+          ✕
+        </button>
+        <span className="flex-1 text-center text-xs text-slate-500">
+          {DIRECTION_LABELS[item.card.direction]}
+        </span>
+        <span className="tabular-nums text-xs">
+          <span className="text-sky-600">{counts.new}</span>{' '}
+          <span className="text-red-500">{counts.learning}</span>{' '}
+          <span className="text-green-600">{counts.review}</span>
+        </span>
+      </header>
+
+      <div
+        className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center"
+        key={tick}
+      >
+        <div data-testid="prompt">
+          <FieldView field={promptFor(item.card.direction)} item={item} large />
+        </div>
+
+        {revealed && (
+          <div
+            data-testid="answer"
+            className="w-full space-y-3 border-t border-slate-200 pt-6 dark:border-slate-700"
+          >
+            <div className="font-semibold">
+              <FieldView field={answerFor(item.card.direction)} item={item} large={false} />
+            </div>
+            <div className="space-y-1 text-slate-500">
+              {promptFor(item.card.direction) !== 'hanzi' &&
+                answerFor(item.card.direction) !== 'hanzi' && (
+                  <HanziText hanzi={item.note.hanzi} pinyin={item.note.pinyin} className="text-2xl" />
+                )}
+              {promptFor(item.card.direction) !== 'pinyin' &&
+                answerFor(item.card.direction) !== 'pinyin' && (
+                  <PinyinText pinyin={item.note.pinyin} className="block text-lg" />
+                )}
+              {promptFor(item.card.direction) !== 'meaning' &&
+                answerFor(item.card.direction) !== 'meaning' && (
+                  <span className="block">{item.note.meaning}</span>
+                )}
+            </div>
+            {item.note.notes && (
+              <p className="whitespace-pre-wrap text-sm text-slate-500">{item.note.notes}</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      <footer className="space-y-2 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
+        {revealed ? (
+          <RatingButtons previews={session.previews(now)} now={now} onRate={rate} />
+        ) : (
+          <Button className="min-h-14 w-full" onClick={() => setRevealed(true)}>
+            Show answer
+          </Button>
+        )}
+        <div className="flex justify-center">
+          <Button variant="ghost" disabled={counts.answered === 0} onClick={undo}>
+            Undo
+          </Button>
+        </div>
+      </footer>
+    </div>
+  );
 }
