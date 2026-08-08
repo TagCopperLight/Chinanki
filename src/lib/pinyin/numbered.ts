@@ -1,10 +1,12 @@
 import { applyToneMark } from '@/lib/pinyin/tones';
 import type { PinyinToken, Tone } from '@/lib/pinyin/types';
 
+/** Letters in pinyin syllables (includes ü/Ü). */
+const LETTER_CHARS = 'a-zA-ZüÜ';
 /** A pinyin syllable in CC-CEDICT notation, e.g. "hao3", "lu:4", "er". */
-const SYLLABLE = /^[a-zA-ZüÜ]+(?::)?[a-zA-Z]*[1-5]?$/;
+const SYLLABLE = new RegExp(`^[${LETTER_CHARS}]+(?::)?[a-zA-Z]*[1-5]?$`);
 /** Splits into word-ish runs and everything else, keeping both. */
-const SPLITTER = /([a-zA-Z:üÜ]+[1-5]?)/;
+const SPLITTER = new RegExp(`([${LETTER_CHARS}:]+[1-5]?)`);
 
 function isPinyinSyllable(token: string): boolean {
   if (!SYLLABLE.test(token)) return false;

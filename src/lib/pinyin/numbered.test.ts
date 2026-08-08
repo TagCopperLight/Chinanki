@@ -33,6 +33,12 @@ describe('parseNumberedPinyin', () => {
       { text: 'èr', tone: 4 },
     ]);
   });
+
+  it('handles uppercase Ü in a multi-character token without splitting', () => {
+    expect(parseNumberedPinyin('lÜ4')).toEqual([
+      { text: 'lǜ', tone: 4 },
+    ]);
+  });
 });
 
 describe('numberedToAccented', () => {
