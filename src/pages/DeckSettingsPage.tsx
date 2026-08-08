@@ -5,6 +5,7 @@ import { deleteDeck, getDeck, updateDeck } from '@/lib/db/decks';
 import { ALL_DIRECTIONS, DIRECTION_LABELS } from '@/lib/db/types';
 import Button from '@/components/Button';
 import Field, { inputClass } from '@/components/Field';
+import ImportExportPanel from '@/components/ImportExportPanel';
 import PageHeader from '@/components/PageHeader';
 import type { Direction } from '@/lib/db/types';
 
@@ -127,6 +128,8 @@ export default function DeckSettingsPage() {
           <input className={inputClass} defaultValue={deck.config.learningSteps.join(', ')} onBlur={commitLearningSteps} />
         </Field>
         {learningStepsError && <p className="text-sm text-red-600">{learningStepsError}</p>}
+
+        <ImportExportPanel deckId={deckId} deckName={deck.name} />
 
         <Button
           variant="danger"
