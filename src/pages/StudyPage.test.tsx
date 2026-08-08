@@ -92,6 +92,14 @@ describe('StudyPage', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Show answer' }));
     await user.click(await screen.findByRole('button', { name: /Easy/ }));
+
+    // The deck has exactly one note, so rating it finishes the session. The
+    // footer's own "Undo" button briefly stays in the DOM (disabled) while
+    // rate()'s IndexedDB write is still in flight; querying for "Undo" before
+    // that settles can grab that stale, disabled button instead of the real
+    // one on the finished screen. Wait for the session to actually finish
+    // before clicking Undo, so the click lands on the enabled button.
+    await screen.findByText(/All done/);
     await user.click(await screen.findByRole('button', { name: 'Undo' }));
 
     await waitFor(() => expect(screen.getByTestId('prompt')).toHaveTextContent('好'));
