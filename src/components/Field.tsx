@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { cloneElement, isValidElement, useId, type ReactElement, type ReactNode } from 'react';
 
 export default function Field({
   label,
@@ -9,15 +9,31 @@ export default function Field({
   hint?: string;
   children: ReactNode;
 }) {
+  const hintId = useId();
+
+  const child =
+    hint && isValidElement(children)
+      ? cloneElement(children as ReactElement<{ 'aria-describedby'?: string }>, {
+          'aria-describedby':
+            [(children as ReactElement<{ 'aria-describedby'?: string }>).props['aria-describedby'], hintId]
+              .filter(Boolean)
+              .join(' ') || undefined,
+        })
+      : children;
+
   return (
     <div className="block">
       <label className="block">
         <span className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">
           {label}
         </span>
-        {children}
+        {child}
       </label>
-      {hint && <span className="mt-1 block text-xs text-slate-500">{hint}</span>}
+      {hint && (
+        <span id={hintId} className="mt-1 block text-xs text-slate-500">
+          {hint}
+        </span>
+      )}
     </div>
   );
 }

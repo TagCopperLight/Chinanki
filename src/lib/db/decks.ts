@@ -1,4 +1,5 @@
 import { db } from '@/lib/db/db';
+import { syncCardsForDeck } from '@/lib/db/notes';
 import { DEFAULT_DECK_CONFIG } from '@/lib/fsrs';
 import type { Deck } from '@/lib/db/types';
 
@@ -35,7 +36,6 @@ export async function updateDeck(id: number, patch: Partial<Omit<Deck, 'id'>>): 
   }
   await db.decks.update(id, patch);
   if (patch.directions !== undefined) {
-    const { syncCardsForDeck } = await import('@/lib/db/notes');
     await syncCardsForDeck(id);
   }
 }
