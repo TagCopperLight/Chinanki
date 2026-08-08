@@ -56,4 +56,22 @@ describe('exportBackup / importBackup', () => {
   it('rejects a backup from a newer schema version', async () => {
     await expect(importBackup('{"version":99,"decks":[]}')).rejects.toThrow('newer version');
   });
+
+  it('rolls back the clear if a bulkAdd fails partway through the restore', async () => {
+    const deckId = await createDeck({ name: 'Keep me', directions: ['hanzi-meaning'] });
+    await createNote({ deckId, hanzi: '好', pinyin: 'hǎo', meaning: 'good' });
+
+    const backup = JSON.parse(await exportBackup()) as Record<string, unknown>;
+    const [deck] = backup.decks as unknown[];
+    // Two decks sharing the same primary key in one bulkAdd call is a genuine
+    // IndexedDB ConstraintError, thrown *after* the transaction's clear() calls
+    // have already run — exactly the failure mode this test needs to force.
+    backup.decks = [deck, deck];
+
+    await expect(importBackup(JSON.stringify(backup))).rejects.toThrow();
+
+    expect((await db.decks.toArray()).map((d) => d.name)).toEqual(['Keep me']);
+    expect(await db.notes.count()).toBe(1);
+    expect((await db.notes.toArray())[0]?.hanzi).toBe('好');
+  });
 });

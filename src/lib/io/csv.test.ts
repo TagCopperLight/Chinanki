@@ -36,6 +36,28 @@ describe('parseCsv', () => {
   it('preserves newlines inside quoted fields', () => {
     expect(parseCsv('a,"line1\nline2"')).toEqual([['a', 'line1\nline2']]);
   });
+
+  it('throws on an unterminated quoted field at end of input', () => {
+    expect(() => parseCsv('好,hǎo,"good\n水,shuǐ,water')).toThrow(/unterminated|quote/i);
+  });
+
+  it('treats a lone CR as a row separator', () => {
+    expect(parseCsv('a,b\rc,d')).toEqual([
+      ['a', 'b'],
+      ['c', 'd'],
+    ]);
+  });
+
+  it('does not produce a blank row for CRLF', () => {
+    expect(parseCsv('a,b\r\nc,d')).toEqual([
+      ['a', 'b'],
+      ['c', 'd'],
+    ]);
+  });
+
+  it('preserves a CR inside a quoted field as literal content', () => {
+    expect(parseCsv('a,"line1\rline2"')).toEqual([['a', 'line1\rline2']]);
+  });
 });
 
 describe('toCsv', () => {

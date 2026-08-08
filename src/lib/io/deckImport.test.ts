@@ -55,6 +55,14 @@ describe('importCsvIntoDeck', () => {
   it('imports nothing from an empty file', async () => {
     expect(await importCsvIntoDeck(deckId, '')).toEqual({ imported: 0, skipped: 0, errors: [] });
   });
+
+  it('reports a malformed file with an unterminated quote instead of silently truncating', async () => {
+    const result = await importCsvIntoDeck(deckId, '好,hǎo,"good\n水,shuǐ,water');
+    expect(result.imported).toBe(0);
+    expect(result.skipped).toBe(0);
+    expect(result.errors[0]).toMatch(/unterminated|quote/i);
+    expect(await db.notes.count()).toBe(0);
+  });
 });
 
 describe('exportDeckCsv', () => {

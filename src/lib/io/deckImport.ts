@@ -17,8 +17,16 @@ function isHeaderRow(row: string[]): boolean {
 
 /** Imports `hanzi,pinyin,meaning[,notes]` rows. Bad rows are reported, not fatal. */
 export async function importCsvIntoDeck(deckId: number, text: string): Promise<ImportResult> {
-  const rows = parseCsv(text);
   const result: ImportResult = { imported: 0, skipped: 0, errors: [] };
+
+  let rows: string[][];
+  try {
+    rows = parseCsv(text);
+  } catch (cause) {
+    result.errors.push(cause instanceof Error ? cause.message : 'The file could not be parsed as CSV');
+    return result;
+  }
+
   const seen = new Set<string>();
 
   for (const [index, row] of rows.entries()) {

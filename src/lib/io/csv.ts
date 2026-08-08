@@ -41,10 +41,18 @@ export function parseCsv(text: string): string[][] {
       hasContent = true;
     } else if (char === '\n') {
       endRow();
-    } else if (char !== '\r') {
+    } else if (char === '\r') {
+      // Treat CRLF as a single terminator; a lone CR still ends the row.
+      if (text[i + 1] !== '\n') endRow();
+    } else {
       field += char;
       if (char.trim() !== '') hasContent = true;
     }
+  }
+  if (inQuotes) {
+    throw new Error(
+      `Unterminated quoted field starting in row ${rows.length + 1}: a closing " is missing`,
+    );
   }
   endRow();
   return rows;
