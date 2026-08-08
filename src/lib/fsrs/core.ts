@@ -32,6 +32,13 @@ export function initialStability(w: number[], rating: Rating): number {
   return Math.max(w[rating - 1]!, MIN_STABILITY);
 }
 
+/**
+ * FSRS-4.5 initial difficulty: linear in the rating.
+ * FSRS-5 later replaced this with an exponential form (and added a (10-D)/9
+ * damping term to nextDifficulty), but FSRS-5's formulas require FSRS-5's
+ * weights — pairing them with the 17 FSRS-4.5 weights in defaults.ts produces
+ * badly miscalibrated difficulties. Keep formulas and weights on the same version.
+ */
 export function initialDifficulty(w: number[], rating: Rating): number {
   return clamp(w[4]! - (rating - 3) * w[5]!, MIN_DIFFICULTY, MAX_DIFFICULTY);
 }

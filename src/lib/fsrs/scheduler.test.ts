@@ -124,6 +124,30 @@ describe('schedule: a relearning card', () => {
     const lapsed = schedule(reviewCard(), 1, NOW, config);
     expect(schedule(lapsed, 3, NOW + 10 * MINUTE, config).lapses).toBe(1);
   });
+
+  it('advances through multiple relearning steps', () => {
+    const multiStepConfig: DeckConfig = { ...config, relearningSteps: [5, 20] };
+    // Lapse a review card into relearning at step 0
+    const lapsed = schedule(reviewCard(), 1, NOW, multiStepConfig);
+    expect(lapsed.state).toBe('relearning');
+    expect(lapsed.learningStep).toBe(0);
+    expect(lapsed.due).toBe(NOW + 5 * MINUTE);
+    expect(lapsed.lapses).toBe(1);
+
+    // Good at step 0 advances to step 1
+    const step1 = schedule(lapsed, 3, NOW + 5 * MINUTE, multiStepConfig);
+    expect(step1.state).toBe('relearning');
+    expect(step1.learningStep).toBe(1);
+    expect(step1.due).toBe(NOW + 5 * MINUTE + 20 * MINUTE);
+    expect(step1.lapses).toBe(1);
+
+    // Good at step 1 graduates back to review
+    const graduated = schedule(step1, 3, NOW + 5 * MINUTE + 20 * MINUTE, multiStepConfig);
+    expect(graduated.state).toBe('review');
+    expect(graduated.learningStep).toBe(0);
+    expect(graduated.scheduledDays).toBeGreaterThanOrEqual(1);
+    expect(graduated.lapses).toBe(1);
+  });
 });
 
 describe('schedule: empty learning steps', () => {
@@ -131,6 +155,23 @@ describe('schedule: empty learning steps', () => {
     const noSteps: DeckConfig = { ...config, learningSteps: [] };
     const next = schedule(newSchedulingState(NOW), 3, NOW, noSteps);
     expect(next.state).toBe('review');
+  });
+});
+
+describe('schedule: empty relearning steps', () => {
+  it('graduates a lapsed card immediately without entering relearning', () => {
+    const noRelearning: DeckConfig = { ...config, relearningSteps: [] };
+    const card = reviewCard();
+    const originalStability = card.stability;
+    // Lapse the card with rating 1 (Again)
+    const lapsed = schedule(card, 1, NOW, noRelearning);
+    // Should graduate immediately to review, not enter relearning
+    expect(lapsed.state).toBe('review');
+    expect(lapsed.lapses).toBe(1);
+    expect(lapsed.learningStep).toBe(0);
+    expect(lapsed.scheduledDays).toBeGreaterThanOrEqual(1);
+    // Stability should decrease due to the failure
+    expect(lapsed.stability).toBeLessThan(originalStability);
   });
 });
 
