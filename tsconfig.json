@@ -13,9 +13,9 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "types": ["vitest/globals", "node"],
+    "types": ["vitest/globals"],
     "baseUrl": ".",
     "paths": { "@/*": ["src/*"] }
   },
-  "include": ["src", "scripts", "e2e"]
+  "include": ["src", "e2e"]
 }

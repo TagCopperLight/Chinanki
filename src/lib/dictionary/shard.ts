@@ -1,4 +1,4 @@
-export const SHARD_COUNT = 64;
+export const SHARD_COUNT = 128;
 
 /**
  * Buckets an entry by its first character so a lookup only downloads one shard.

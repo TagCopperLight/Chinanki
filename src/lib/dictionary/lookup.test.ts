@@ -53,6 +53,20 @@ describe('lookupExact', () => {
     clearDictionaryCache();
     expect(await lookupExact('好')).toBeNull();
   });
+
+  it('retries a shard whose first fetch failed instead of caching the failure', async () => {
+    let calls = 0;
+    setDictionaryFetch((async () => {
+      calls++;
+      if (calls === 1) return { ok: false } as Response;
+      return { ok: true, json: async () => [HAO] } as Response;
+    }) as unknown as typeof fetch);
+    clearDictionaryCache();
+
+    expect(await lookupExact('好')).toBeNull();
+    expect(await lookupExact('好')).toEqual(HAO);
+    expect(calls).toBe(2);
+  });
 });
 
 describe('lookupPrefix', () => {
