@@ -187,6 +187,22 @@ describe('StudyPage', () => {
     });
   });
 
+  it('shows an error state with a way back when the deck does not exist', async () => {
+    render(
+      <MemoryRouter initialEntries={['/deck/999999/study']}>
+        <Routes>
+          <Route path="/deck/:deckId/study" element={<StudyPage />} />
+          <Route path="/" element={<p>Deck list</p>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText(/Couldn't start this study session/)).toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Back to decks' }));
+    expect(await screen.findByText('Deck list')).toBeInTheDocument();
+  });
+
   it('still allows Close and Undo buttons to be activated via keyboard', async () => {
     const user = userEvent.setup();
     await createNote({ deckId, hanzi: '好', pinyin: 'hǎo', meaning: 'good' });

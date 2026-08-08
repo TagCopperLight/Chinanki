@@ -86,7 +86,7 @@ export class StudySession {
     let logId = 0;
     await db.transaction('rw', db.cards, db.reviews, async () => {
       await db.cards.update(previous.id!, next);
-      logId = await db.reviews.add(log as ReviewLog);
+      logId = await db.reviews.add(log);
     });
 
     const updated: QueueItem = { note: item.note, card: { ...previous, ...next } };

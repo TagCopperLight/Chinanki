@@ -1,11 +1,7 @@
 {
   "name": "chinanki",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "doc": "docs"
-  },
+  "description": "Offline-first Mandarin vocabulary spaced-repetition PWA, backed entirely by browser IndexedDB.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json && vite build",
@@ -16,7 +12,6 @@
     "test:e2e": "playwright test",
     "build:dict": "tsx scripts/build-dictionary.ts"
   },
-  "keywords": [],
   "type": "module",
   "dependencies": {
     "dexie": "^4.4.4",

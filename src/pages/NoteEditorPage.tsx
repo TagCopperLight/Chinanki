@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router';
 import { createNote, deleteNote, getNote, updateNote } from '@/lib/db/notes';
 import Button from '@/components/Button';
 import DictionarySuggestions from '@/components/DictionarySuggestions';
+import EmptyState from '@/components/EmptyState';
 import Field, { inputClass } from '@/components/Field';
 import PageHeader from '@/components/PageHeader';
 import type { DictEntry } from '@/lib/dictionary';
@@ -20,18 +21,26 @@ export default function NoteEditorPage() {
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [loaded, setLoaded] = useState(!isEditing);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     if (noteId === null) return;
     void (async () => {
-      const note = await getNote(noteId);
-      if (!note) return;
-      setDeckId(note.deckId);
-      setHanzi(note.hanzi);
-      setPinyin(note.pinyin);
-      setMeaning(note.meaning);
-      setNotes(note.notes);
-      setLoaded(true);
+      try {
+        const note = await getNote(noteId);
+        if (!note) {
+          setLoadError('This word no longer exists.');
+          return;
+        }
+        setDeckId(note.deckId);
+        setHanzi(note.hanzi);
+        setPinyin(note.pinyin);
+        setMeaning(note.meaning);
+        setNotes(note.notes);
+        setLoaded(true);
+      } catch (cause) {
+        setLoadError(cause instanceof Error ? cause.message : 'Could not load this word');
+      }
     })();
   }, [noteId]);
 
@@ -53,6 +62,15 @@ export default function NoteEditorPage() {
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not save the note');
     }
+  }
+
+  if (loadError) {
+    return (
+      <>
+        <PageHeader title="Note" backTo="/" />
+        <EmptyState title="Couldn't load this word" description={loadError} />
+      </>
+    );
   }
 
   if (!loaded) return <PageHeader title="Note" backTo={`/deck/${deckId}`} />;

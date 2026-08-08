@@ -35,7 +35,16 @@ function CardRows({ note }: { note: Note }) {
             variant="ghost"
             className="px-2 text-xs"
             aria-label={`Reset ${DIRECTION_LABELS[card.direction]}`}
-            onClick={() => resetCard(card.id!)}
+            onClick={() => {
+              if (
+                !window.confirm(
+                  `Reset "${note.hanzi}" (${DIRECTION_LABELS[card.direction]})? This discards its progress.`,
+                )
+              ) {
+                return;
+              }
+              void resetCard(card.id!);
+            }}
           >
             Reset
           </Button>

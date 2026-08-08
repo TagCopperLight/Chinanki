@@ -20,8 +20,19 @@ export default function DeckSettingsPage() {
   const [directionError, setDirectionError] = useState('');
   const [retentionError, setRetentionError] = useState('');
   const [learningStepsError, setLearningStepsError] = useState('');
+  const [nameError, setNameError] = useState('');
 
   if (!deck) return <PageHeader title="Deck settings" backTo="/" />;
+
+  async function commitName(event: React.FocusEvent<HTMLInputElement>) {
+    try {
+      await updateDeck(deckId, { name: event.target.value });
+      setNameError('');
+    } catch (cause) {
+      setNameError(cause instanceof Error ? cause.message : 'Could not save the deck name');
+      event.target.value = deck!.name;
+    }
+  }
 
   async function toggleDirection(direction: Direction, enabled: boolean) {
     const next = enabled
@@ -81,12 +92,9 @@ export default function DeckSettingsPage() {
       <PageHeader title="Deck settings" backTo={`/deck/${deckId}`} />
       <div className="space-y-6 p-4">
         <Field label="Name">
-          <input
-            className={inputClass}
-            defaultValue={deck.name}
-            onBlur={(event) => updateDeck(deckId, { name: event.target.value })}
-          />
+          <input className={inputClass} defaultValue={deck.name} onBlur={commitName} />
         </Field>
+        {nameError && <p className="text-sm text-red-600">{nameError}</p>}
 
         <fieldset>
           <legend className="mb-2 text-sm font-medium text-slate-600 dark:text-slate-300">

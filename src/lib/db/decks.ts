@@ -31,13 +31,17 @@ export function listDecks(): Promise<Deck[]> {
 }
 
 export async function updateDeck(id: number, patch: Partial<Omit<Deck, 'id'>>): Promise<void> {
-  if (patch.name !== undefined && patch.name.trim() === '') {
-    throw new Error('Deck name is required');
+  if (patch.name !== undefined) {
+    const name = patch.name.trim();
+    if (name === '') throw new Error('Deck name is required');
+    patch = { ...patch, name };
   }
-  await db.decks.update(id, patch);
-  if (patch.directions !== undefined) {
-    await syncCardsForDeck(id);
-  }
+  await db.transaction('rw', db.decks, db.notes, db.cards, db.reviews, async () => {
+    await db.decks.update(id, patch);
+    if (patch.directions !== undefined) {
+      await syncCardsForDeck(id);
+    }
+  });
 }
 
 /** Deletes the deck and everything that belongs to it, atomically. */

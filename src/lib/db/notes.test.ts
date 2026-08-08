@@ -64,6 +64,29 @@ describe('updateNote', () => {
     expect(note?.updatedAt).toBeGreaterThanOrEqual(note!.createdAt);
     expect(await listCardsForNote(noteId)).toHaveLength(before.length);
   });
+
+  it('rejects a hanzi edit that collides with another note in the same deck', async () => {
+    await createNote({ deckId, hanzi: '你', pinyin: 'nǐ', meaning: 'you' });
+    const noteId = await createNote({ deckId, ...HAO });
+
+    await expect(updateNote(noteId, { hanzi: '你' })).rejects.toThrow('already in this deck');
+    expect((await getNote(noteId))?.hanzi).toBe('好');
+  });
+
+  it('allows editing a note without changing its own hanzi', async () => {
+    const noteId = await createNote({ deckId, ...HAO });
+    await expect(updateNote(noteId, { hanzi: '好', meaning: 'good; fine' })).resolves.toBeUndefined();
+    expect((await getNote(noteId))?.meaning).toBe('good; fine');
+  });
+
+  it('allows the same hanzi to collide across different decks', async () => {
+    const other = await createDeck({ name: 'Other' });
+    await createNote({ deckId: other, ...HAO });
+    const noteId = await createNote({ deckId, hanzi: '你', pinyin: 'nǐ', meaning: 'you' });
+
+    await expect(updateNote(noteId, { hanzi: '好' })).resolves.toBeUndefined();
+    expect((await getNote(noteId))?.hanzi).toBe('好');
+  });
 });
 
 describe('deleteNote', () => {

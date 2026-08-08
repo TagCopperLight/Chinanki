@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { db } from '@/lib/db/db';
 import { createDeck } from '@/lib/db/decks';
@@ -75,17 +75,39 @@ describe('BrowsePage', () => {
     });
   });
 
-  it('resets a card back to new', async () => {
-    const user = userEvent.setup();
-    const note = (await db.notes.toArray())[0]!;
-    const card = (await db.cards.where('noteId').equals(note.id!).toArray())[0]!;
-    await db.cards.update(card.id!, { state: 'review', stability: 30, reps: 5 });
+  describe('resetting a card', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
 
-    renderPage();
-    await user.click(await screen.findByRole('button', { name: new RegExp(`Cards for ${note.hanzi}`) }));
-    await user.click((await screen.findAllByRole('button', { name: /^Reset/ }))[0]!);
+    it('asks for confirmation, and leaves the card untouched when cancelled', async () => {
+      const user = userEvent.setup();
+      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      const note = (await db.notes.toArray())[0]!;
+      const card = (await db.cards.where('noteId').equals(note.id!).toArray())[0]!;
+      await db.cards.update(card.id!, { state: 'review', stability: 30, reps: 5 });
 
-    await waitFor(async () => expect((await db.cards.get(card.id!))?.state).toBe('new'));
+      renderPage();
+      await user.click(await screen.findByRole('button', { name: new RegExp(`Cards for ${note.hanzi}`) }));
+      await user.click((await screen.findAllByRole('button', { name: /^Reset/ }))[0]!);
+
+      expect(confirmSpy).toHaveBeenCalled();
+      expect((await db.cards.get(card.id!))?.state).toBe('review');
+    });
+
+    it('resets a card back to new once confirmed', async () => {
+      const user = userEvent.setup();
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const note = (await db.notes.toArray())[0]!;
+      const card = (await db.cards.where('noteId').equals(note.id!).toArray())[0]!;
+      await db.cards.update(card.id!, { state: 'review', stability: 30, reps: 5 });
+
+      renderPage();
+      await user.click(await screen.findByRole('button', { name: new RegExp(`Cards for ${note.hanzi}`) }));
+      await user.click((await screen.findAllByRole('button', { name: /^Reset/ }))[0]!);
+
+      await waitFor(async () => expect((await db.cards.get(card.id!))?.state).toBe('new'));
+    });
   });
 
   it('shows an empty state when nothing matches', async () => {

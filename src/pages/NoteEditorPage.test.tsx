@@ -122,4 +122,20 @@ describe('NoteEditorPage: editing', () => {
 
     await waitFor(async () => expect((await db.notes.get(noteId))?.meaning).toBe('good; fine'));
   });
+
+  it('shows an error state instead of a permanent blank page when the note no longer exists', async () => {
+    render(
+      <MemoryRouter initialEntries={['/note/999999']}>
+        <Routes>
+          <Route path="/note/:noteId" element={<NoteEditorPage />} />
+          <Route path="/" element={<p>Deck list</p>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText(/Couldn't load this word/)).toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Back' }));
+    expect(await screen.findByText('Deck list')).toBeInTheDocument();
+  });
 });

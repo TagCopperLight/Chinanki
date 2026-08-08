@@ -6,6 +6,7 @@ import { DIRECTION_LABELS } from '@/lib/db/types';
 import type { Rating } from '@/lib/fsrs';
 import type { QueueItem } from '@/lib/study';
 import Button from '@/components/Button';
+import EmptyState from '@/components/EmptyState';
 import HanziText from '@/components/HanziText';
 import PinyinText from '@/components/PinyinText';
 import RatingButtons from '@/components/RatingButtons';
@@ -31,6 +32,7 @@ export default function StudyPage() {
   const [item, setItem] = useState<QueueItem | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [tick, setTick] = useState(0);
+  const [error, setError] = useState('');
   const shownAt = useRef(Date.now());
   // rate() is async and awaits an IndexedDB write before resetting `revealed`.
   // Without this flag, a held key's repeat events (or a fast double click)
@@ -41,10 +43,14 @@ export default function StudyPage() {
 
   useEffect(() => {
     void (async () => {
-      const started = await StudySession.start(deckId, Date.now());
-      setSession(started);
-      setItem(started.current);
-      shownAt.current = Date.now();
+      try {
+        const started = await StudySession.start(deckId, Date.now());
+        setSession(started);
+        setItem(started.current);
+        shownAt.current = Date.now();
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : 'Could not start this study session');
+      }
     })();
   }, [deckId]);
 
@@ -101,6 +107,16 @@ export default function StudyPage() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [revealed, rate]);
+
+  if (error) {
+    return (
+      <EmptyState
+        title="Couldn't start this study session"
+        description={error}
+        action={<Button onClick={() => navigate('/')}>Back to decks</Button>}
+      />
+    );
+  }
 
   if (!session) return null;
 

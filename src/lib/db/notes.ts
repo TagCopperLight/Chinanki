@@ -54,7 +54,22 @@ export async function updateNote(
   if (patch.meaning !== undefined && patch.meaning.trim() === '') {
     throw new Error('Meaning is required');
   }
-  await db.notes.update(id, { ...patch, updatedAt: Date.now() });
+
+  await db.transaction('rw', db.notes, async () => {
+    const next = { ...patch };
+    if (next.hanzi !== undefined) {
+      const hanzi = next.hanzi.trim();
+      next.hanzi = hanzi;
+      const existing = await db.notes.get(id);
+      if (existing) {
+        const duplicate = await db.notes.where({ deckId: existing.deckId, hanzi }).first();
+        if (duplicate && duplicate.id !== id) {
+          throw new Error(`"${hanzi}" is already in this deck`);
+        }
+      }
+    }
+    await db.notes.update(id, { ...next, updatedAt: Date.now() });
+  });
 }
 
 export async function deleteNote(id: number): Promise<void> {
