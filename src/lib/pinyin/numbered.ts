@@ -4,7 +4,7 @@ import type { PinyinToken, Tone } from '@/lib/pinyin/types';
 /** A pinyin syllable in CC-CEDICT notation, e.g. "hao3", "lu:4", "er". */
 const SYLLABLE = /^[a-zA-ZüÜ]+(?::)?[a-zA-Z]*[1-5]?$/;
 /** Splits into word-ish runs and everything else, keeping both. */
-const SPLITTER = /([a-zA-Z:ü]+[1-5]?)/;
+const SPLITTER = /([a-zA-Z:üÜ]+[1-5]?)/;
 
 function isPinyinSyllable(token: string): boolean {
   if (!SYLLABLE.test(token)) return false;

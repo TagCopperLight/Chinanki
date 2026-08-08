@@ -25,4 +25,15 @@ describe('parseAccentedPinyin', () => {
   it('returns an empty array for an empty string', () => {
     expect(parseAccentedPinyin('')).toEqual([]);
   });
+
+  it('keeps a capitalized accented syllable as one token with the correct tone', () => {
+    // markIndex() finds the "a" first, so the tone mark lands on the second
+    // letter of "Anhui" -> "Ānhuī" tone comes from "ā" (tone 1); the whole
+    // word must survive as a single token, not be split at the accented "Ā".
+    expect(parseAccentedPinyin('Ānhuī')).toEqual([{ text: 'Ānhuī', tone: 1 }]);
+  });
+
+  it('handles mixed-case multi-syllable proper nouns', () => {
+    expect(parseAccentedPinyin('Běijīng')).toEqual([{ text: 'Běijīng', tone: 3 }]);
+  });
 });

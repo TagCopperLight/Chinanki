@@ -55,7 +55,7 @@ for (const forms of Object.values(MARKS)) {
 
 export function toneOfAccentedSyllable(syllable: string): Tone {
   for (const char of syllable) {
-    const tone = TONE_OF_CHAR.get(char);
+    const tone = TONE_OF_CHAR.get(char.toLowerCase());
     if (tone !== undefined) return tone;
   }
   return 0;
