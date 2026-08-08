@@ -94,12 +94,7 @@ export class StudySession {
 
     let queueIndex = -1;
     if (next.due - now < RE_QUEUE_WINDOW_MS) {
-      // An untouched 'new' card's `due` is just its creation timestamp, not a
-      // scheduling signal (buildQueue never sorts new cards by it either), so
-      // treat it as available right now for this comparison.
-      queueIndex = this.queue.findIndex(
-        (queued) => (queued.card.state === 'new' ? now : queued.card.due) > next.due,
-      );
+      queueIndex = this.queue.findIndex((queued) => queued.card.due > next.due);
       if (queueIndex === -1) queueIndex = this.queue.length;
       this.queue.splice(queueIndex, 0, updated);
     }
