@@ -34,6 +34,10 @@ export async function updateDeck(id: number, patch: Partial<Omit<Deck, 'id'>>): 
     throw new Error('Deck name is required');
   }
   await db.decks.update(id, patch);
+  if (patch.directions !== undefined) {
+    const { syncCardsForDeck } = await import('@/lib/db/notes');
+    await syncCardsForDeck(id);
+  }
 }
 
 /** Deletes the deck and everything that belongs to it, atomically. */
