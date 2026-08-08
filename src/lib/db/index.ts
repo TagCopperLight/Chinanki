@@ -4,4 +4,4 @@ export { createDeck, deleteDeck, getDeck, listDecks, updateDeck } from '@/lib/db
 export { createNote, deleteNote, getNote, syncCardsForDeck, syncCardsForNote, updateNote } from '@/lib/db/notes';
 export { DEFAULT_SETTINGS, getSettings, saveSettings } from '@/lib/db/settings';
 export { ALL_DIRECTIONS, DIRECTION_LABELS } from '@/lib/db/types';
-export type { AppSettings, Card, Deck, Direction, Note, ReviewLog } from '@/lib/db/types';
+export type { AppSettings, Card, CardState, Deck, Direction, Note, ReviewLog } from '@/lib/db/types';

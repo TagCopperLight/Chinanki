@@ -1,5 +1,7 @@
 import type { CardState, DeckConfig, Rating, SchedulingState, Tone } from '@/lib/db/imports';
 
+export type { CardState };
+
 export type Direction = 'hanzi-meaning' | 'hanzi-pinyin' | 'meaning-pinyin' | 'pinyin-meaning';
 
 export const ALL_DIRECTIONS: readonly Direction[] = [
