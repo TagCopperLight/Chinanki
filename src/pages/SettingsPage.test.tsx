@@ -1,9 +1,12 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router';
 import { db } from '@/lib/db/db';
+import { createDeck } from '@/lib/db/decks';
 import { getSettings } from '@/lib/db/settings';
+import { exportBackup } from '@/lib/io';
+import * as backupModule from '@/lib/io/backup';
 import SettingsPage from '@/pages/SettingsPage';
 
 beforeEach(async () => {
@@ -58,5 +61,85 @@ describe('SettingsPage', () => {
     renderPage();
     expect(await screen.findByRole('button', { name: 'Export backup' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Import backup' })).toBeInTheDocument();
+  });
+
+  describe('export failures', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('shows a message when export throws instead of failing silently', async () => {
+      const user = userEvent.setup();
+      vi.spyOn(backupModule, 'exportBackup').mockRejectedValueOnce(new Error('disk is on fire'));
+      renderPage();
+
+      await user.click(await screen.findByRole('button', { name: 'Export backup' }));
+
+      expect(await screen.findByText('disk is on fire')).toBeInTheDocument();
+    });
+  });
+
+  describe('restoring a backup', () => {
+    let importSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      importSpy = vi.spyOn(backupModule, 'importBackup');
+    });
+
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it('does not touch the database when the user cancels the confirm dialog', async () => {
+      const user = userEvent.setup();
+      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      await createDeck({ name: 'Keep me', directions: ['hanzi-meaning'] });
+
+      renderPage();
+      const input = await screen.findByLabelText('Backup file');
+      const file = new File(['{"version":1,"decks":[]}'], 'backup.json', {
+        type: 'application/json',
+      });
+      await user.upload(input, file);
+
+      expect(confirmSpy).toHaveBeenCalled();
+      expect(importSpy).not.toHaveBeenCalled();
+      expect((await db.decks.toArray()).map((d) => d.name)).toEqual(['Keep me']);
+    });
+
+    it('restores real data and shows a success message on a valid backup', async () => {
+      const user = userEvent.setup();
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+      // Seed data, export it as a genuine backup, then wipe the database so
+      // the import has to actually restore it rather than being a no-op.
+      const seedDeckId = await createDeck({ name: 'Source deck', directions: ['hanzi-meaning'] });
+      const json = await exportBackup();
+      await db.decks.clear();
+      expect(await db.decks.get(seedDeckId)).toBeUndefined();
+
+      renderPage();
+      const input = await screen.findByLabelText('Backup file');
+      const file = new File([json], 'backup.json', { type: 'application/json' });
+      await user.upload(input, file);
+
+      expect(await screen.findByText('Backup restored.')).toBeInTheDocument();
+      const decks = await db.decks.toArray();
+      expect(decks.map((d) => d.name)).toEqual(['Source deck']);
+    });
+
+    it('shows an error and leaves existing data intact on a corrupt file', async () => {
+      const user = userEvent.setup();
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      await createDeck({ name: 'Untouched', directions: ['hanzi-meaning'] });
+
+      renderPage();
+      const input = await screen.findByLabelText('Backup file');
+      const file = new File(['not json at all'], 'backup.json', { type: 'application/json' });
+      await user.upload(input, file);
+
+      expect(await screen.findByText('That file is not a Chinanki backup')).toBeInTheDocument();
+      expect((await db.decks.toArray()).map((d) => d.name)).toEqual(['Untouched']);
+    });
   });
 });

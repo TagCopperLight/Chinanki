@@ -20,6 +20,17 @@ export default function SettingsPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState('');
 
+  async function onExport() {
+    try {
+      downloadText(
+        `chinanki-backup-${new Date().toISOString().slice(0, 10)}.json`,
+        await exportBackup(),
+      );
+    } catch (cause) {
+      setMessage(cause instanceof Error ? cause.message : 'Could not export backup');
+    }
+  }
+
   async function onBackupFile(file: File) {
     if (!window.confirm('Importing a backup replaces everything currently in the app. Continue?')) {
       return;
@@ -102,16 +113,7 @@ export default function SettingsPage() {
             deletes your decks.
           </p>
           <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              className="flex-1"
-              onClick={async () =>
-                downloadText(
-                  `chinanki-backup-${new Date().toISOString().slice(0, 10)}.json`,
-                  await exportBackup(),
-                )
-              }
-            >
+            <Button variant="secondary" className="flex-1" onClick={onExport}>
               Export backup
             </Button>
             <Button variant="secondary" className="flex-1" onClick={() => fileInput.current?.click()}>
