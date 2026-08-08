@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router';
@@ -110,5 +110,84 @@ describe('StudyPage', () => {
       const logs = await db.reviews.toArray();
       expect(logs[0]?.rating).toBe(1);
     });
+  });
+
+  it('records the rating of a focused button activated via keyboard, not Good', async () => {
+    const user = userEvent.setup();
+    await createNote({ deckId, hanzi: '好', pinyin: 'hǎo', meaning: 'good' });
+    renderPage();
+
+    await user.click(await screen.findByRole('button', { name: 'Show answer' }));
+    const againButton = await screen.findByRole('button', { name: /Again/ });
+    againButton.focus();
+    await user.keyboard('{Enter}');
+
+    await waitFor(async () => {
+      const logs = await db.reviews.toArray();
+      expect(logs).toHaveLength(1);
+      expect(logs[0]?.rating).toBe(1);
+    });
+  });
+
+  it('does not record a second review from an auto-repeated keydown', async () => {
+    await createNote({ deckId, hanzi: '好', pinyin: 'hǎo', meaning: 'good' });
+    renderPage();
+
+    await userEvent.setup().click(await screen.findByRole('button', { name: 'Show answer' }));
+
+    // Simulate a held key: the browser fires repeat keydown events while the
+    // key is down, all before the first rate() call's IndexedDB write resolves.
+    fireEvent.keyDown(window, { key: 'Enter' });
+    fireEvent.keyDown(window, { key: 'Enter', repeat: true });
+    fireEvent.keyDown(window, { key: 'Enter', repeat: true });
+
+    await waitFor(async () => {
+      const logs = await db.reviews.toArray();
+      expect(logs).toHaveLength(1);
+    });
+  });
+
+  it('does not record a second review from a fast double-click on a rating button', async () => {
+    await createNote({ deckId, hanzi: '好', pinyin: 'hǎo', meaning: 'good' });
+    renderPage();
+
+    await userEvent.setup().click(await screen.findByRole('button', { name: 'Show answer' }));
+    const easyButton = await screen.findByRole('button', { name: /Easy/ });
+    fireEvent.click(easyButton);
+    fireEvent.click(easyButton);
+
+    await waitFor(async () => {
+      const logs = await db.reviews.toArray();
+      expect(logs).toHaveLength(1);
+    });
+  });
+
+  it('still reveals and rates Good via Space/Enter when nothing specific is focused', async () => {
+    await createNote({ deckId, hanzi: '好', pinyin: 'hǎo', meaning: 'good' });
+    renderPage();
+
+    await screen.findByRole('button', { name: 'Show answer' });
+    document.body.focus();
+    fireEvent.keyDown(window, { key: 'Enter' });
+    await screen.findByTestId('answer');
+    fireEvent.keyDown(window, { key: 'Enter' });
+
+    await waitFor(async () => {
+      const logs = await db.reviews.toArray();
+      expect(logs).toHaveLength(1);
+      expect(logs[0]?.rating).toBe(3);
+    });
+  });
+
+  it('still allows Close and Undo buttons to be activated via keyboard', async () => {
+    const user = userEvent.setup();
+    await createNote({ deckId, hanzi: '好', pinyin: 'hǎo', meaning: 'good' });
+    renderPage();
+
+    const closeButton = await screen.findByRole('button', { name: 'Close' });
+    closeButton.focus();
+    await user.keyboard('{Enter}');
+
+    expect(await screen.findByText('Deck page')).toBeInTheDocument();
   });
 });

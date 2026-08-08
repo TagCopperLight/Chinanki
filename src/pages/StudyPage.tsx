@@ -32,6 +32,12 @@ export default function StudyPage() {
   const [revealed, setRevealed] = useState(false);
   const [tick, setTick] = useState(0);
   const shownAt = useRef(Date.now());
+  // rate() is async and awaits an IndexedDB write before resetting `revealed`.
+  // Without this flag, a held key's repeat events (or a fast double click)
+  // can all observe stale state and each call rate(), logging duplicate
+  // reviews for one card. This guards the answering path itself, since state
+  // updates alone are too slow to prevent overlapping invocations.
+  const answering = useRef(false);
 
   useEffect(() => {
     void (async () => {
@@ -45,11 +51,17 @@ export default function StudyPage() {
   const rate = useCallback(
     async (rating: Rating) => {
       if (!session) return;
-      await session.answer(rating, Date.now(), Date.now() - shownAt.current);
-      setItem(session.current);
-      setRevealed(false);
-      shownAt.current = Date.now();
-      setTick((value) => value + 1);
+      if (answering.current) return;
+      answering.current = true;
+      try {
+        await session.answer(rating, Date.now(), Date.now() - shownAt.current);
+        setItem(session.current);
+        setRevealed(false);
+        shownAt.current = Date.now();
+        setTick((value) => value + 1);
+      } finally {
+        answering.current = false;
+      }
     },
     [session],
   );
@@ -63,9 +75,21 @@ export default function StudyPage() {
     setTick((value) => value + 1);
   }, [session]);
 
-  // Keyboard shortcuts make desktop review fast; the buttons stay the mobile path.
+  // Keyboard shortcuts make desktop review fast; the buttons stay the mobile
+  // path. Scope: this global listener only acts when focus is NOT on an
+  // interactive control (button/link/input/textarea/select). When a rating
+  // button, Close, or Undo is focused, native activation (click) must win so
+  // Enter/Space triggers *that* control instead of being hijacked into
+  // rate(3) via preventDefault(). Auto-repeat is also ignored (event.repeat)
+  // so holding a key can't fire rate() more than once.
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
+      if (event.repeat) return;
+      const target = event.target;
+      if (target instanceof HTMLElement) {
+        const interactiveTags = ['BUTTON', 'A', 'INPUT', 'TEXTAREA', 'SELECT'];
+        if (interactiveTags.includes(target.tagName)) return;
+      }
       if (event.key === ' ' || event.key === 'Enter') {
         event.preventDefault();
         if (revealed) void rate(3);
