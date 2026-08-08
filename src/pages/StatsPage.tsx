@@ -69,6 +69,8 @@ export default function StatsPage() {
   const forecast = buildForecast(cards, now, rolloverHour, FORECAST_DAYS);
   const breakdown = cardBreakdown(cards);
   const monthly = retentionByMonth(reviews);
+  const totalForecastDue = forecast.reduce((sum, day) => sum + day.dueCount, 0);
+  const latestMonth = monthly.at(-1);
 
   return (
     <>
@@ -124,7 +126,10 @@ export default function StatsPage() {
               <h2 className="text-sm font-medium text-slate-600 dark:text-slate-300">
                 Upcoming workload
               </h2>
-              <div className="h-40">
+              <p className="sr-only" aria-live="off">
+                {`${totalForecastDue} card${totalForecastDue === 1 ? '' : 's'} due over the next ${FORECAST_DAYS} days.`}
+              </p>
+              <div className="h-40" aria-hidden="true">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={forecast}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" strokeOpacity={0.2} />
@@ -142,14 +147,21 @@ export default function StatsPage() {
                 <h2 className="text-sm font-medium text-slate-600 dark:text-slate-300">
                   Retention by month
                 </h2>
-                <div className="h-40">
+                {latestMonth && (
+                  <p className="sr-only" aria-live="off">
+                    {`Latest month (${latestMonth.month}) retention: ${Math.round(latestMonth.rate * 100)}%.`}
+                  </p>
+                )}
+                <div className="h-40" aria-hidden="true">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={monthly}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" strokeOpacity={0.2} />
                       <XAxis dataKey="month" tick={{ fontSize: 10 }} />
                       <YAxis domain={[0, 1]} width={36} tick={{ fontSize: 10 }} tickFormatter={(v: number) => `${Math.round(v * 100)}%`} />
                       <Tooltip
-                        formatter={(value) => `${Math.round(Number(value) * 100)}%`}
+                        formatter={(value) =>
+                          typeof value === 'number' ? `${Math.round(value * 100)}%` : 'n/a'
+                        }
                       />
                       <Line type="monotone" dataKey="rate" stroke="#16a34a" dot={false} />
                     </LineChart>
