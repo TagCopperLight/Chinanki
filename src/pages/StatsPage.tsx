@@ -24,6 +24,7 @@ import {
 } from '@/lib/stats';
 import { studyDayKey } from '@/lib/time';
 import { useSettings } from '@/hooks/useSettings';
+import ChartTooltip from '@/components/ChartTooltip';
 import EmptyState from '@/components/EmptyState';
 import Heatmap from '@/components/Heatmap';
 import PageHeader from '@/components/PageHeader';
@@ -133,9 +134,21 @@ export default function StatsPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={forecast}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" strokeOpacity={0.2} />
-                    <XAxis dataKey="date" tick={{ fontSize: 10 }} interval={6} tickFormatter={(d: string) => d.slice(5)} />
-                    <YAxis tick={{ fontSize: 10 }} width={28} allowDecimals={false} />
-                    <Tooltip />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 10, className: 'fill-slate-500 dark:fill-slate-400' }}
+                      interval={6}
+                      tickFormatter={(d: string) => d.slice(5)}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, className: 'fill-slate-500 dark:fill-slate-400' }}
+                      width={28}
+                      allowDecimals={false}
+                    />
+                    <Tooltip
+                      content={<ChartTooltip />}
+                      cursor={{ className: 'fill-slate-200/70 dark:fill-slate-700/60' }}
+                    />
                     <Bar dataKey="dueCount" name="Due" fill="#0284c7" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -156,12 +169,21 @@ export default function StatsPage() {
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={monthly}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" strokeOpacity={0.2} />
-                      <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-                      <YAxis domain={[0, 1]} width={36} tick={{ fontSize: 10 }} tickFormatter={(v: number) => `${Math.round(v * 100)}%`} />
+                      <XAxis
+                        dataKey="month"
+                        tick={{ fontSize: 10, className: 'fill-slate-500 dark:fill-slate-400' }}
+                      />
+                      <YAxis
+                        domain={[0, 1]}
+                        width={36}
+                        tick={{ fontSize: 10, className: 'fill-slate-500 dark:fill-slate-400' }}
+                        tickFormatter={(v: number) => `${Math.round(v * 100)}%`}
+                      />
                       <Tooltip
-                        formatter={(value) =>
-                          typeof value === 'number' ? `${Math.round(value * 100)}%` : 'n/a'
+                        content={
+                          <ChartTooltip formatValue={(value) => `${Math.round(value * 100)}%`} />
                         }
+                        cursor={{ className: 'stroke-slate-300 dark:stroke-slate-600' }}
                       />
                       <Line type="monotone" dataKey="rate" stroke="#16a34a" dot={false} />
                     </LineChart>
