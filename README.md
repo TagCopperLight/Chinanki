@@ -115,10 +115,11 @@ docker compose build --build-arg \
 docker compose up -d
 ```
 
-This bypasses `deploy.sh`, so it does **not** set a `chinanki:previous` tag —
+This bypasses `deploy.sh`, so it does **not** set a `chinanki:last-good` tag —
 there is no rollback target after a dictionary refresh done this way. If you
-want one, tag the current image yourself before rebuilding: `docker image tag
-chinanki:latest chinanki:previous`.
+want one, tag the current image yourself before rebuilding, but only if it is
+currently serving correctly: `docker image tag chinanki:latest
+chinanki:last-good`.
 
 ### Verifying the image
 
