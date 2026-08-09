@@ -44,11 +44,14 @@ export default function NoteEditorPage() {
     })();
   }, [noteId]);
 
-  /** Fills only the fields the user has left blank, so manual edits survive. */
+  /**
+   * Overwrites all three fields. Picking a second suggestion must visibly
+   * correct a wrong first pick, which a fill-only-if-blank rule cannot do.
+   */
   function applySuggestion(entry: DictEntry) {
     setHanzi(entry.simplified);
-    if (pinyin.trim() === '') setPinyin(entry.pinyin);
-    if (meaning.trim() === '') setMeaning(entry.meanings.join('; '));
+    setPinyin(entry.pinyin);
+    setMeaning(entry.meanings.join('; '));
   }
 
   async function save() {

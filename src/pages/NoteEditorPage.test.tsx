@@ -69,7 +69,22 @@ describe('NoteEditorPage: creating', () => {
     expect(screen.getByLabelText('Meaning')).toHaveValue('good person');
   });
 
-  it('does not overwrite fields the user already filled in', async () => {
+  it('replaces pinyin and meaning when a different suggestion is picked', async () => {
+    const user = userEvent.setup();
+    renderNew();
+    await user.type(screen.getByLabelText('Hanzi'), '好');
+
+    await user.click(await screen.findByRole('button', { name: /好人/ }));
+    await waitFor(() => expect(screen.getByLabelText('Pinyin')).toHaveValue('hǎo rén'));
+
+    await user.click(await screen.findByRole('button', { name: /good; well/ }));
+
+    await waitFor(() => expect(screen.getByLabelText('Hanzi')).toHaveValue('好'));
+    expect(screen.getByLabelText('Pinyin')).toHaveValue('hǎo');
+    expect(screen.getByLabelText('Meaning')).toHaveValue('good; well');
+  });
+
+  it('overwrites values the user typed by hand', async () => {
     const user = userEvent.setup();
     renderNew();
     await user.type(screen.getByLabelText('Meaning'), 'my own gloss');
@@ -77,7 +92,7 @@ describe('NoteEditorPage: creating', () => {
     await user.click(await screen.findByRole('button', { name: /好人/ }));
 
     await waitFor(() => expect(screen.getByLabelText('Pinyin')).toHaveValue('hǎo rén'));
-    expect(screen.getByLabelText('Meaning')).toHaveValue('my own gloss');
+    expect(screen.getByLabelText('Meaning')).toHaveValue('good person');
   });
 
   it('shows the error when the word is already in the deck', async () => {
