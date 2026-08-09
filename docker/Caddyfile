@@ -15,13 +15,21 @@
 		file_server
 	}
 
-	# 128 dictionary shards, content-stable, ~113 KB each. Worth caching hard —
-	# but same reasoning as /assets: a miss must 404, never fall back to
-	# index.html. `lookup.ts` checks `response.ok`, so a 200 HTML body reads as
-	# a "successful" fetch, then fails to JSON-parse and degrades to no
+	# 128 dictionary shards, ~113 KB each. Worth caching hard — but same
+	# reasoning as /assets: a miss must 404, never fall back to index.html.
+	# `lookup.ts` checks `response.ok`, so a 200 HTML body reads as a
+	# "successful" fetch, then fails to JSON-parse and degrades to no
 	# suggestions — and the service worker's CacheFirst rule for /dict/*.json
 	# has no time-based expiration, so that shard stays broken indefinitely,
 	# even across a corrected deploy.
+	#
+	# The shard body is NOT content-stable: `meanings` is a structured field
+	# (string[] before French support, { en?, fr? } after) and this URL
+	# carries no version or hash, so a client with this response already
+	# cached — here or in the service worker's runtime cache — keeps getting
+	# served the old shape after a deploy changes it. `lookup.ts`'s loadShard
+	# normalises on read for exactly that reason; do not treat a shard's JSON
+	# shape as fixed just because the byte size is.
 	handle /dict/* {
 		header Cache-Control "public, max-age=604800"
 		file_server

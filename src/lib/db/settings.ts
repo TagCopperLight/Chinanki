@@ -5,6 +5,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   rolloverHour: 4,
   theme: 'system',
   colourHanzi: true,
+  suggestionLanguage: 'en',
   toneColours: {
     0: '#94a3b8', // neutral — slate
     1: '#ef4444', // first  — red

@@ -57,6 +57,19 @@ describe('SettingsPage', () => {
     expect(screen.getByText(/CC BY-SA 4.0/)).toBeInTheDocument();
   });
 
+  it('changes the suggestion language', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await user.selectOptions(await screen.findByLabelText('Suggestion language'), 'fr');
+    await waitFor(async () => expect((await getSettings()).suggestionLanguage).toBe('fr'));
+  });
+
+  it('carries the CFDICT attribution', async () => {
+    renderPage();
+    expect(await screen.findByText(/CFDICT/)).toBeInTheDocument();
+    expect(screen.getByText(/CC BY-SA 3.0/)).toBeInTheDocument();
+  });
+
   it('offers backup export and import', async () => {
     renderPage();
     expect(await screen.findByRole('button', { name: 'Export backup' })).toBeInTheDocument();

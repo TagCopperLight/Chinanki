@@ -18,7 +18,13 @@ export default defineConfig({
           {
             urlPattern: /\/dict\/.*\.json$/,
             handler: 'CacheFirst',
-            options: { cacheName: 'chinanki-dict', expiration: { maxEntries: 128 } },
+            // Bump this name whenever the shard payload SHAPE changes (e.g.
+            // meanings: string[] -> { en?, fr? }). Workbox does not clear
+            // runtime caches on SW update, and with exactly 128 shards the
+            // maxEntries LRU cap never evicts, so a name bump is the only way
+            // to retire stale bodies from this cache layer. See lookup.ts's
+            // loadShard for the read-side hedge that covers the rest.
+            options: { cacheName: 'chinanki-dict-v2', expiration: { maxEntries: 128 } },
           },
         ],
       },

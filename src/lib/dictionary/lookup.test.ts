@@ -8,12 +8,14 @@ import {
 import { shardKeyFor } from '@/lib/dictionary/shard';
 import type { DictEntry } from '@/lib/dictionary/types';
 
-const HAO: DictEntry = { simplified: '好', traditional: '好', pinyin: 'hǎo', meanings: ['good'] };
+const HAO: DictEntry = {
+  simplified: '好', traditional: '好', pinyin: 'hǎo', meanings: { en: ['good'] },
+};
 const HAOREN: DictEntry = {
-  simplified: '好人', traditional: '好人', pinyin: 'hǎo rén', meanings: ['good person'],
+  simplified: '好人', traditional: '好人', pinyin: 'hǎo rén', meanings: { en: ['good person'] },
 };
 const HAOCHI: DictEntry = {
-  simplified: '好吃', traditional: '好吃', pinyin: 'hǎo chī', meanings: ['tasty'],
+  simplified: '好吃', traditional: '好吃', pinyin: 'hǎo chī', meanings: { en: ['tasty'] },
 };
 
 let fetchMock: ReturnType<typeof vi.fn>;
@@ -66,6 +68,34 @@ describe('lookupExact', () => {
     expect(await lookupExact('好')).toBeNull();
     expect(await lookupExact('好')).toEqual(HAO);
     expect(calls).toBe(2);
+  });
+});
+
+describe('stale shard shape normalisation', () => {
+  const OLD_SHAPE_HAO = { simplified: '好', traditional: '好', pinyin: 'hǎo', meanings: ['good'] };
+
+  it('upgrades an old array-shaped shard body for lookupExact', async () => {
+    setDictionaryFetch(
+      (async () => ({ ok: true, json: async () => [OLD_SHAPE_HAO] }) as Response) as typeof fetch,
+    );
+    clearDictionaryCache();
+    expect(await lookupExact('好')).toEqual(HAO);
+  });
+
+  it('upgrades an old array-shaped shard body for lookupPrefix', async () => {
+    setDictionaryFetch(
+      (async () => ({ ok: true, json: async () => [OLD_SHAPE_HAO] }) as Response) as typeof fetch,
+    );
+    clearDictionaryCache();
+    expect(await lookupPrefix('好')).toEqual([HAO]);
+  });
+
+  it('passes a shard already in the new shape through untouched', async () => {
+    setDictionaryFetch(
+      (async () => ({ ok: true, json: async () => [HAO] }) as Response) as typeof fetch,
+    );
+    clearDictionaryCache();
+    expect(await lookupExact('好')).toEqual(HAO);
   });
 });
 

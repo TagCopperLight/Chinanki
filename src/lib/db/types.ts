@@ -1,4 +1,5 @@
 import type { CardState, DeckConfig, Rating, SchedulingState, Tone } from '@/lib/db/imports';
+import type { GlossLanguage } from '@/lib/dictionary/types';
 
 export type { CardState };
 
@@ -79,4 +80,6 @@ export interface AppSettings {
   /** Colour the hanzi by tone as well as the pinyin. */
   colourHanzi: boolean;
   toneColours: Record<Tone, string>;
+  /** Language of the dictionary suggestions in the note editor. */
+  suggestionLanguage: GlossLanguage;
 }
