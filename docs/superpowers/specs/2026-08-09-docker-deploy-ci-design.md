@@ -50,7 +50,7 @@ The VPS has 24 GB RAM, so building from source on the box is comfortable.
 | Deploy trigger | Manual `./deploy.sh` over SSH | No SSH private key in GitHub secrets, no extra listener service, deploys happen when intended |
 | Static server in container | Caddy | One config language across the stack; SPA fallback and cache headers in ~15 lines |
 | CI scope | typecheck + unit tests + build, Playwright E2E, Docker build | Chosen by the user; no linter is added (none exists today) |
-| Node version | 22 LTS, pinned in both Dockerfile and CI | CI must validate the same runtime the VPS builds on |
+| Node version | `26.7`, pinned identically in Dockerfile and CI | Matches local dev exactly; Node is build-only here, so LTS buys nothing |
 
 ## Architecture
 
@@ -60,7 +60,7 @@ A two-stage Dockerfile. Stage one builds; stage two serves. Node and the interme
 dictionary source never reach the final image, which lands around 60 MB.
 
 ```dockerfile
-FROM node:22-alpine AS builder
+FROM node:26.7-alpine AS builder
 WORKDIR /app
 
 # Dictionary in its own early layer, so dependency churn does not re-trigger a 9 MB download.
@@ -201,8 +201,13 @@ Notes:
   `e2e` jobs skip the 9 MB download entirely. Only the `docker` job builds it.
 - **The `docker` job is the one that earns its keep.** Because the VPS builds from source, a
   broken Dockerfile would otherwise only surface mid-deploy, on the box, by hand.
-- **Node 22 LTS is pinned in both CI and the Dockerfile** so CI validates the same runtime
-  the VPS builds on.
+- **Node `26.7` is pinned in both CI and the Dockerfile**, matching the local dev machine
+  (`v26.7.0`), so all three environments run the same runtime. Node exists only in the build
+  stage — the shipped image is `caddy:2-alpine` with no Node at all — so the usual argument
+  for an LTS release (a long security-patch window at runtime) does not apply. The minor is
+  pinned rather than floating `node:26-alpine`: this project has already been bitten once by
+  unpinned toolchain drift, when TypeScript resolved to 7.0.2, dropped `baseUrl` support and
+  broke the typecheck, forcing a pin to 5.9.3. Bump deliberately, in both files together.
 - **CI is advisory, not gating.** Deploys are manual and nothing prevents deploying a red
   commit. Making it gate is a branch-protection setting on `main` — a GitHub configuration
   choice, deliberately out of scope for this repo.
@@ -278,7 +283,8 @@ behaviour, which the project has not yet had.
 | Wrong cache headers pin users to a stale build | High | Explicit `no-cache` on all unhashed files; asserted by `smoke-image.sh`. |
 | Dictionary silently empty | Medium | `curl -f` plus the shard-count assertion. |
 | VPS build resource exhaustion | Low | 24 GB RAM; a Vite build wants ~1–2 GB. |
-| CI green but VPS build fails | Low | The `docker` CI job builds the same Dockerfile; Node pinned identically in both. |
+| CI green but VPS build fails | Low | The `docker` CI job builds the same Dockerfile; Node pinned to the same `26.7` in both, matching local dev. |
+| Node 26 is a Current release, not LTS | Low | Node is build-stage only; no Node ships in the runtime image. If a future Node breaks the build, the pin means it breaks on a deliberate bump, not spontaneously. |
 
 ## Files
 
