@@ -59,6 +59,19 @@ export default function SettingsPage() {
           </select>
         </Field>
 
+        <Field label="Suggestion language" hint="Which language the dictionary suggestions show.">
+          <select
+            className={inputClass}
+            value={settings.suggestionLanguage}
+            onChange={(event) =>
+              update({ suggestionLanguage: event.target.value as typeof settings.suggestionLanguage })
+            }
+          >
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+          </select>
+        </Field>
+
         <Field
           label="New day starts at"
           hint="Reviews before this hour count towards the previous day."
@@ -146,6 +159,17 @@ export default function SettingsPage() {
               rel="noreferrer"
             >
               www.mdbg.net
+            </a>
+          </p>
+          <p>
+            French glosses from CFDICT, licensed CC BY-SA 3.0.{' '}
+            <a
+              className="underline"
+              href="https://chine.in/mandarin/dictionnaire/CFDICT/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              chine.in
             </a>
           </p>
           <p>Scheduling by FSRS-4.5.</p>
