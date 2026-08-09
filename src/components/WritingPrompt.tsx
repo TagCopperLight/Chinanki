@@ -24,7 +24,7 @@ export default function WritingPrompt({
 
   return (
     <div className="flex flex-col items-center gap-2" data-testid="writing-prompt">
-      <div className="aspect-square w-64 max-w-[70vw] rounded-xl border border-dashed border-slate-300 dark:border-slate-600">
+      <div className="aspect-square w-[min(20rem,80vw)] rounded-xl border border-dashed border-slate-300 dark:border-slate-600">
         <DrawingCanvas
           label={`Draw character ${index + 1} of ${count}`}
           strokes={current}
@@ -32,7 +32,7 @@ export default function WritingPrompt({
           className="h-full w-full text-slate-900 dark:text-slate-100"
         />
       </div>
-      <div className="flex w-64 max-w-[70vw] items-center justify-between">
+      <div className="flex w-[min(20rem,80vw)] items-center justify-between">
         <Button
           variant="ghost"
           disabled={blank}

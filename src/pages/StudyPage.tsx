@@ -145,6 +145,10 @@ export default function StudyPage() {
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
+    // characters.length is read in onKey but deliberately left out of this
+    // array: it only changes when the card changes, and every card change
+    // also flips revealed or moreCharacters, which already forces onKey to
+    // be re-registered with the new value in its closure.
   }, [revealed, rate, moreCharacters]);
 
   if (error) {
@@ -212,7 +216,7 @@ export default function StudyPage() {
           <FieldView field={promptFor(item.card.direction)} item={item} large colour={revealed} />
         </div>
 
-        {writing && !revealed && (
+        {writing && !revealed && characters.length > 0 && (
           <WritingPrompt
             count={characters.length}
             index={charIndex}

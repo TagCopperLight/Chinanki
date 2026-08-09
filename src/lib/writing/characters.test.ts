@@ -9,8 +9,13 @@ describe('drawableCharacters', () => {
     ]);
   });
 
-  it('drops whitespace, which is not drawable', () => {
-    expect(drawableCharacters('你 好', 'nǐ hǎo').map((item) => item.character)).toEqual(['你', '好']);
+  it('drops whitespace, which is not drawable, and loses tones in the process', () => {
+    // The space inflates the code-point count characterTones compares
+    // against the syllable count, so it bails out to all-null before this
+    // function ever gets to filter the space out.
+    const characters = drawableCharacters('你 好', 'nǐ hǎo');
+    expect(characters.map((item) => item.character)).toEqual(['你', '好']);
+    expect(characters.map((item) => item.tone)).toEqual([null, null]);
   });
 
   it('keeps characters outside the BMP intact', () => {

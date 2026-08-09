@@ -9,8 +9,11 @@ export interface DrawableCharacter {
 
 /**
  * The characters the learner has to draw: one per code point, whitespace
- * dropped. Tones are resolved before the filter so they stay aligned with the
- * pinyin even when the hanzi field contains spaces.
+ * dropped. Tones are resolved before the filter, so a character and its tone
+ * stay paired up. But whitespace in hanzi inflates the code-point count
+ * characterTones compares against the syllable count, so hanzi containing
+ * whitespace comes back with no tones at all (every entry null) and its
+ * ghost is left untinted.
  */
 export function drawableCharacters(hanzi: string, pinyin: string): DrawableCharacter[] {
   const tones = characterTones(hanzi, pinyin);

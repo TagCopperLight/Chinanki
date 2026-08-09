@@ -326,5 +326,28 @@ describe('StudyPage', () => {
       await waitFor(() => expect(screen.getByTestId('prompt')).toHaveTextContent('bookshop'));
       expect(screen.getByRole('button', { name: 'Undo stroke' })).toBeDisabled();
     });
+
+    it('advances, reveals, and rates a writing card entirely by keyboard', async () => {
+      await renderWritingCard();
+      await screen.findByTestId('writing-progress');
+
+      // Nothing is focused, so this Space must advance the character rather
+      // than fall through to reveal or activate a button.
+      fireEvent.keyDown(window, { key: ' ' });
+      expect(await screen.findByTestId('writing-progress')).toHaveTextContent('2 / 2');
+      expect(screen.queryByTestId('answer')).not.toBeInTheDocument();
+
+      // On the last character, Space reveals instead of advancing further.
+      fireEvent.keyDown(window, { key: ' ' });
+      expect(await screen.findByTestId('answer')).toBeInTheDocument();
+
+      fireEvent.keyDown(window, { key: '3' });
+
+      await waitFor(async () => {
+        const logs = await db.reviews.toArray();
+        expect(logs).toHaveLength(1);
+        expect(logs[0]?.rating).toBe(3);
+      });
+    });
   });
 });
