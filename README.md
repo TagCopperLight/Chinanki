@@ -148,12 +148,15 @@ whole host. Prefer the label above, or Compose's own
 
 ### Refreshing the dictionary
 
-CC-CEDICT is downloaded during the image build and pinned by Docker's layer
-cache, so builds are reproducible. To pick up a newer dictionary:
+Both dictionaries are downloaded during the image build and pinned by Docker's
+layer cache, so builds are reproducible. To pick up newer data, bust the cache
+on whichever you want to refresh — the URLs share one layer, so refreshing
+either re-fetches both:
 
 ```bash
-docker compose build --build-arg \
-  CEDICT_URL="https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz#$(date +%F)"
+docker compose build \
+  --build-arg CEDICT_URL="https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz#$(date +%F)" \
+  --build-arg CFDICT_URL="https://chine.in/mandarin/dictionnaire/CFDICT/cfdict.zip#$(date +%F)"
 docker compose up -d
 ```
 
