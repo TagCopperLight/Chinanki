@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { db } from '@/lib/db/db';
-import { createDeck } from '@/lib/db/decks';
+import { createDeck, updateDeck } from '@/lib/db/decks';
 import { createNote } from '@/lib/db/notes';
 import StudyPage from '@/pages/StudyPage';
 
@@ -228,5 +228,66 @@ describe('StudyPage', () => {
     await user.keyboard('{Enter}');
 
     expect(await screen.findByText('Deck page')).toBeInTheDocument();
+  });
+
+  describe('writing cards', () => {
+    // Every note must exist before renderPage(): StudySession.start snapshots
+    // the queue, so a note added afterwards is not in this session.
+    async function renderWritingCard(extra = false) {
+      await updateDeck(deckId, { directions: ['meaning-hanzi'] });
+      await createNote({ deckId, hanzi: '书店', pinyin: 'shū diàn', meaning: 'bookshop' });
+      if (extra) {
+        await createNote({ deckId, hanzi: '医院', pinyin: 'yī yuàn', meaning: 'hospital' });
+      }
+      renderPage();
+      return userEvent.setup();
+    }
+
+    it('prompts with the meaning and offers a drawing box per character', async () => {
+      await renderWritingCard();
+      expect(await screen.findByTestId('prompt')).toHaveTextContent('bookshop');
+      expect(await screen.findByTestId('writing-progress')).toHaveTextContent('1 / 2');
+      expect(screen.queryByTestId('answer')).not.toBeInTheDocument();
+    });
+
+    it('advances through the characters before offering the answer', async () => {
+      const user = await renderWritingCard();
+      await user.click(await screen.findByRole('button', { name: 'Next' }));
+      expect(await screen.findByTestId('writing-progress')).toHaveTextContent('2 / 2');
+      expect(screen.getByRole('button', { name: 'Show answer' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
+    });
+
+    it('lets the answer be revealed from the first character', async () => {
+      const user = await renderWritingCard();
+      await user.click(await screen.findByRole('button', { name: 'Show answer' }));
+      expect(await screen.findByTestId('answer')).toHaveTextContent('书店');
+      expect(await screen.findByTestId('writing-answer')).toBeInTheDocument();
+      expect(screen.getAllByRole('img', { name: /Your drawing of/ })).toHaveLength(2);
+    });
+
+    it('toggles the overlay off and on', async () => {
+      const user = await renderWritingCard();
+      await user.click(await screen.findByRole('button', { name: 'Show answer' }));
+      const toggle = await screen.findByRole('button', { name: 'Overlay' });
+      expect(toggle).toHaveAttribute('aria-pressed', 'true');
+      await user.click(toggle);
+      expect(screen.getByRole('button', { name: 'Overlay' })).toHaveAttribute(
+        'aria-pressed',
+        'false',
+      );
+    });
+
+    it('starts the next card back at the first character with a clean box', async () => {
+      const user = await renderWritingCard(true);
+      await user.click(await screen.findByRole('button', { name: 'Next' }));
+      await user.click(await screen.findByRole('button', { name: 'Show answer' }));
+      await user.click(await screen.findByRole('button', { name: /Easy/ }));
+
+      await waitFor(() =>
+        expect(screen.getByTestId('writing-progress')).toHaveTextContent('1 / 2'),
+      );
+      expect(screen.getByRole('button', { name: 'Undo stroke' })).toBeDisabled();
+    });
   });
 });
