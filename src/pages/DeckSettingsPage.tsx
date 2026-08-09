@@ -114,7 +114,8 @@ export default function DeckSettingsPage() {
             ))}
           </div>
           <p className="mt-2 text-xs text-slate-500">
-            Nothing prompts for the character itself — writing practice comes later.
+            The 汉字 directions are writing practice — you draw the character, then check it
+            yourself.
           </p>
           {directionError && <p className="mt-2 text-sm text-red-600">{directionError}</p>}
         </fieldset>
