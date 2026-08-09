@@ -55,6 +55,12 @@ check() { # label, actual, expected-substring
   fi
 }
 
+check_status() { # label, url, expected-http-code
+  local code
+  code=$(curl -s -o /dev/null -w '%{http_code}' "$2")
+  check "$1" "$code" "^$3\$"
+}
+
 echo "==> Checks"
 
 code=$(curl -s -o /dev/null -w '%{http_code}' "http://localhost:$PORT/")
@@ -113,6 +119,18 @@ else
   hdr=$(curl -sI "http://localhost:$PORT/dict/$shard")
   check "dictionary shard is cached" "$hdr" "max-age=604800"
 fi
+
+# A missing file under /assets or /dict must 404, not fall through to the SPA
+# index.html. If it doesn't, Workbox precaching a stale/renamed asset gets a
+# 200 text/html cached forever as that asset's URL, and the dictionary lookup
+# code sees response.ok, tries to parse HTML as JSON, and silently degrades to
+# no suggestions — with the broken entry stuck in the service worker cache
+# with no expiry, surviving even a corrected redeploy.
+check_status "missing /assets file returns 404 (no SPA fallback)" \
+  "http://localhost:$PORT/assets/nope-does-not-exist.js" 404
+
+check_status "missing /dict shard returns 404 (no SPA fallback)" \
+  "http://localhost:$PORT/dict/zz-not-a-shard.json" 404
 
 count=$(docker exec "$NAME" sh -c 'ls -1 /srv/dict 2>/dev/null | wc -l' || echo 0)
 if [ "$count" -gt 100 ]; then

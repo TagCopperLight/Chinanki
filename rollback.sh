@@ -19,3 +19,13 @@ docker compose up -d --no-build
 
 echo "==> Rolled back. Running image:"
 docker image inspect chinanki:latest --format '{{.Id}}  created {{.Created}}'
+
+# After this, chinanki:latest and chinanki:previous point at the same image
+# ID — there is nothing left to fall back to. If this rolled-back image also
+# turns out to be bad, rollback.sh has no further target; you'll need to fix
+# forward or restore from a rebuild/older git commit.
+echo
+echo "WARNING: chinanki:previous now equals chinanki:latest."
+echo "         There is no further rollback target — a second bad deploy"
+echo "         cannot be undone with this script. Fix forward or rebuild"
+echo "         an older commit if this image is also broken."

@@ -2,27 +2,40 @@
 	root * /srv
 	encode gzip zstd
 
-	# Vite content-hashes these filenames, so they can never go stale.
-	@immutable path /assets/*
-	header @immutable Cache-Control "public, max-age=31536000, immutable"
+	# Vite content-hashes these filenames, so they can never go stale — but a
+	# request for one that does NOT exist (renamed/pruned build artifact, a
+	# stale Workbox precache entry) must 404, not fall through to index.html.
+	# A `handle` block only runs `file_server`, with no `try_files` fallback,
+	# so a miss here is a real 404. If it fell through instead, the missing
+	# asset would come back 200 text/html under a long-lived immutable cache
+	# header — cached by the service worker under that .js URL forever, with
+	# the app then failing to parse HTML as JS/JSON and silently degrading.
+	handle /assets/* {
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
 
-	# 128 dictionary shards, content-stable, ~113 KB each. Worth caching hard.
-	@dict path /dict/*
-	header @dict Cache-Control "public, max-age=604800"
+	# 128 dictionary shards, content-stable, ~113 KB each. Worth caching hard —
+	# but same reasoning as /assets: a miss must 404, never fall back to
+	# index.html. `lookup.ts` checks `response.ok`, so a 200 HTML body reads as
+	# a "successful" fetch, then fails to JSON-parse and degrades to no
+	# suggestions — and the service worker's CacheFirst rule for /dict/*.json
+	# has no time-based expiration, so that shard stays broken indefinitely,
+	# even across a corrected deploy.
+	handle /dict/* {
+		header Cache-Control "public, max-age=604800"
+		file_server
+	}
 
 	# Everything else must revalidate: the app shell, unhashed files (sw.js,
 	# manifest.webmanifest, registerSW.js, icons), and every client-side route
-	# (/stats, /deck/:id, /settings, ...). `header` runs before `try_files`
-	# rewrites the request path, so a matcher can't enumerate client-side routes
-	# by literal path — it would only ever see the original, un-rewritten path
-	# and silently miss any route not listed. Negating over the two prefixes
-	# that are genuinely safe to cache long-term instead covers every current
-	# and future route with no Caddyfile maintenance. If these are cached, a bad
-	# deploy pins users to a broken build with no remote way to recover.
-	@revalidate not path /assets/* /dict/*
-	header @revalidate Cache-Control "no-cache"
-
-	# Client-side routing: /stats and friends have no file behind them.
-	try_files {path} {path}/ /index.html
-	file_server
+	# (/stats, /deck/:id, /settings, ...). This is also the only block that may
+	# use the SPA fallback (try_files ... /index.html) — it must NOT be shared
+	# with the /assets or /dict blocks above, or a missing file under either of
+	# those prefixes would silently become a 200 HTML response instead of a 404.
+	handle {
+		header Cache-Control "no-cache"
+		try_files {path} {path}/ /index.html
+		file_server
+	}
 }

@@ -29,6 +29,7 @@ RUN npm run build:dict -- /tmp/cedict.u8 \
  && npm run build
 
 FROM caddy:2-alpine
+LABEL org.opencontainers.image.title="chinanki"
 COPY --from=builder /app/dist /srv
 COPY docker/Caddyfile /etc/caddy/Caddyfile
 EXPOSE 80
