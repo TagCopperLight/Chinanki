@@ -34,6 +34,21 @@ describe('StudyPage', () => {
     expect(screen.queryByTestId('answer')).not.toBeInTheDocument();
   });
 
+  it('does not colour the hanzi prompt by tone until the answer is revealed', async () => {
+    const user = userEvent.setup();
+    await createNote({ deckId, hanzi: '好', pinyin: 'hǎo', meaning: 'good' });
+    renderPage();
+
+    const prompt = await screen.findByTestId('prompt');
+    expect(prompt.querySelector('[data-tone]')).toBeNull();
+
+    await user.click(await screen.findByRole('button', { name: 'Show answer' }));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('prompt').querySelector('[data-tone]')).not.toBeNull(),
+    );
+  });
+
   it('reveals the answer, including every field', async () => {
     const user = userEvent.setup();
     await createNote({ deckId, hanzi: '好', pinyin: 'hǎo', meaning: 'good' });
