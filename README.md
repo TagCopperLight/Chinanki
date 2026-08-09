@@ -40,15 +40,65 @@ not a bug. Re-run outside that window if it happens.
 
 ## Deploying
 
-`npm run build` produces a fully static `dist/`. Any static host works
-(Netlify, Vercel, GitHub Pages, Caddy). One requirement: **all routes must fall
-back to `index.html`**, since the app uses client-side routing.
+Deployed as a Docker container behind a central Caddy reverse proxy that owns
+80/443 and handles TLS. The container publishes no host ports; it joins the
+external `web` Docker network with the alias `chinanki`.
 
-Netlify — `public/_redirects`:
+The container is **stateless** — all user data lives in the browser's IndexedDB,
+so there are no volumes and nothing to back up on the server.
+
+### First-time setup on the VPS
+
+```bash
+git clone <repo-url> /home/ubuntu/chinanki
+cd /home/ubuntu/chinanki
+./deploy.sh
+```
+
+Then add a block to `/home/ubuntu/caddy/Caddyfile`:
 
 ```
-/*  /index.html  200
+chinanki.bourdet.be {
+	reverse_proxy chinanki:80
+}
 ```
+
+and reload Caddy:
+
+```bash
+docker exec caddy caddy reload --config /etc/caddy/Caddyfile
+```
+
+### Subsequent deploys
+
+```bash
+./deploy.sh     # git pull, rebuild, restart
+./rollback.sh   # restore the previous image in seconds
+```
+
+`deploy.sh` builds before recreating the container, so a failed build leaves the
+running site untouched.
+
+### Refreshing the dictionary
+
+CC-CEDICT is downloaded during the image build and pinned by Docker's layer
+cache, so builds are reproducible. To pick up a newer dictionary:
+
+```bash
+docker compose build --build-arg \
+  CEDICT_URL="https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz#$(date +%F)"
+docker compose up -d
+```
+
+### Verifying the image
+
+```bash
+./smoke-image.sh
+```
+
+Builds the image, runs it, and asserts the things that actually break in
+production: SPA fallback on deep links, `no-cache` on `sw.js`/`index.html`,
+`immutable` on hashed assets, and that the dictionary shipped.
 
 ## Backups
 

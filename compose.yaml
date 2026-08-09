@@ -1,0 +1,21 @@
+# The VPS runs one central Caddy (/home/ubuntu/caddy) owning 80/443 and doing TLS.
+# App containers publish no host ports; they join the external `web` network with an
+# alias, and Caddy routes to them by that alias:
+#   chinanki.bourdet.be { reverse_proxy chinanki:80 }
+services:
+  chinanki:
+    build:
+      context: .
+    image: chinanki:latest
+    container_name: chinanki
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      web:
+        aliases:
+          - chinanki
+
+networks:
+  web:
+    external: true
