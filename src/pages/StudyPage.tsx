@@ -11,11 +11,28 @@ import HanziText from '@/components/HanziText';
 import PinyinText from '@/components/PinyinText';
 import RatingButtons from '@/components/RatingButtons';
 
-function FieldView({ field, item, large }: { field: NoteField; item: QueueItem; large: boolean }) {
+function FieldView({
+  field,
+  item,
+  large,
+  colour = true,
+}: {
+  field: NoteField;
+  item: QueueItem;
+  large: boolean;
+  colour?: boolean;
+}) {
   const { note } = item;
   const size = large ? 'text-5xl' : 'text-2xl';
   if (field === 'hanzi') {
-    return <HanziText hanzi={note.hanzi} pinyin={note.pinyin} className={`${size} leading-tight`} />;
+    return (
+      <HanziText
+        hanzi={note.hanzi}
+        pinyin={note.pinyin}
+        colour={colour}
+        className={`${size} leading-tight`}
+      />
+    );
   }
   if (field === 'pinyin') {
     return <PinyinText pinyin={note.pinyin} className={large ? 'text-4xl' : 'text-xl'} />;
@@ -168,7 +185,7 @@ export default function StudyPage() {
         key={tick}
       >
         <div data-testid="prompt">
-          <FieldView field={promptFor(item.card.direction)} item={item} large />
+          <FieldView field={promptFor(item.card.direction)} item={item} large colour={revealed} />
         </div>
 
         {revealed && (
