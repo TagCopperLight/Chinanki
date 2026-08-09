@@ -38,7 +38,11 @@ export default function DrawingCanvas({
   className?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const drawing = useRef(false);
+  // The pointer currently mid-stroke, or null between strokes. A stroke
+  // belongs to exactly one pointer, so a second contact (e.g. palm while
+  // writing with a stylus) must not touch it — hence tracking the id, not
+  // just a drawing/not-drawing flag. A ref, not state: it must not re-render.
+  const activePointerId = useRef<number | null>(null);
   const [size, setSize] = useState(0);
 
   // The bitmap has to follow the CSS box, or the strokes land offset from the
@@ -126,19 +130,24 @@ export default function DrawingCanvas({
       // touch-none, or drawing scrolls the page instead of marking the box.
       className={`touch-none ${className}`}
       onPointerDown={(event) => {
+        // Ignore a second pointer touching down mid-stroke instead of
+        // starting a new stroke over the one in progress.
+        if (activePointerId.current !== null) return;
         event.currentTarget.setPointerCapture(event.pointerId);
-        drawing.current = true;
+        activePointerId.current = event.pointerId;
         onStrokesChange?.(beginStroke(strokes, pointOf(event)));
       }}
       onPointerMove={(event) => {
-        if (!drawing.current) return;
+        if (event.pointerId !== activePointerId.current) return;
         onStrokesChange?.(extendStroke(strokes, pointOf(event)));
       }}
-      onPointerUp={() => {
-        drawing.current = false;
+      onPointerUp={(event) => {
+        if (event.pointerId !== activePointerId.current) return;
+        activePointerId.current = null;
       }}
-      onPointerCancel={() => {
-        drawing.current = false;
+      onPointerCancel={(event) => {
+        if (event.pointerId !== activePointerId.current) return;
+        activePointerId.current = null;
       }}
     />
   );
