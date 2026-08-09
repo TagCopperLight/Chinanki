@@ -72,6 +72,26 @@ describe('mergeDictionaries', () => {
     expect(merged[0]!.meanings.fr).toHaveLength(6);
   });
 
+  it('drops a gloss-less English entry instead of shipping an empty meanings array', () => {
+    const merged = mergeDictionaries([parsed('词', 'ci2', [])], []);
+    expect(merged).toEqual([]);
+  });
+
+  it('drops a gloss-less French entry instead of shipping an empty meanings array', () => {
+    const merged = mergeDictionaries([], [parsed('词', 'ci2', [])]);
+    expect(merged).toEqual([]);
+  });
+
+  it('does not attach an empty French gloss list to a matching English entry', () => {
+    const merged = mergeDictionaries(
+      [parsed('好', 'hǎo', ['good'])],
+      [parsed('好', 'hǎo', [])],
+    );
+    expect(merged).toEqual([
+      { simplified: '好', traditional: '好', pinyin: 'hǎo', meanings: { en: ['good'] } },
+    ]);
+  });
+
   it('attaches French to every English entry sharing a reading', () => {
     const merged = mergeDictionaries(
       [parsed('好', 'hǎo', ['good']), parsed('好', 'hǎo', ['fine'])],

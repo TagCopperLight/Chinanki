@@ -49,6 +49,17 @@ describe('DictionarySuggestions', () => {
     expect(screen.getByText('fr')).toBeInTheDocument();
   });
 
+  it('names the fallback language in full for assistive tech, not just the badge letters', async () => {
+    render(<DictionarySuggestions query="好" onPick={vi.fn()} />);
+    // 好客 is French-only, so English-language readers fall back to it and
+    // get an "fr" badge. The badge must not read as a bare "fr" text node
+    // inside the button's accessible name.
+    expect(await screen.findByText('hospitalier')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /好客.*shown in French/ }),
+    ).toBeInTheDocument();
+  });
+
   it('passes the resolved meaning to onPick', async () => {
     await saveSettings({ suggestionLanguage: 'fr' });
     const onPick = vi.fn();

@@ -39,12 +39,18 @@ function union(existing: string[] | undefined, incoming: string[]): string[] {
  * are appended as French-only entries, which about 8,700 of them are.
  */
 export function mergeDictionaries(en: ParsedEntry[], fr: ParsedEntry[]): DictEntry[] {
-  const merged: DictEntry[] = en.map((entry) => ({
-    simplified: entry.simplified,
-    traditional: entry.traditional,
-    pinyin: entry.pinyin,
-    meanings: { en: entry.meanings.slice(0, MAX_GLOSSES) },
-  }));
+  // DictEntry.meanings documents "at least one language is present and
+  // non-empty". A gloss-less line (e.g. a CC-CEDICT/CFDICT entry whose gloss
+  // field is empty) must not survive into the merge in either language, or
+  // it ships as a clickable suggestion row with a blank meaning.
+  const merged: DictEntry[] = en
+    .filter((entry) => entry.meanings.length > 0)
+    .map((entry) => ({
+      simplified: entry.simplified,
+      traditional: entry.traditional,
+      pinyin: entry.pinyin,
+      meanings: { en: entry.meanings.slice(0, MAX_GLOSSES) },
+    }));
 
   const byKey = new Map<string, DictEntry[]>();
   for (const entry of merged) {
@@ -55,6 +61,7 @@ export function mergeDictionaries(en: ParsedEntry[], fr: ParsedEntry[]): DictEnt
   }
 
   for (const entry of fr) {
+    if (entry.meanings.length === 0) continue;
     const key = entryKey(entry);
     const matches = byKey.get(key);
     if (matches) {

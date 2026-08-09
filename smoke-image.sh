@@ -116,6 +116,7 @@ else
   check "dictionary shard $shard returns 200" "$code" "^200$"
   body=$(curl -s "http://localhost:$PORT/dict/$shard")
   check "dictionary shard is JSON with entries" "$body" '"simplified"'
+  check "dictionary shard carries French glosses" "$body" '"fr"'
   hdr=$(curl -sI "http://localhost:$PORT/dict/$shard")
   check "dictionary shard is cached" "$hdr" "max-age=604800"
 fi

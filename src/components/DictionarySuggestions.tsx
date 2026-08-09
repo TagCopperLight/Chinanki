@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { glossesFor, lookupPrefix } from '@/lib/dictionary';
-import type { DictEntry } from '@/lib/dictionary';
+import type { DictEntry, GlossLanguage } from '@/lib/dictionary';
 import { useSettings } from '@/hooks/useSettings';
 import PinyinText from '@/components/PinyinText';
 
 /** Debounced prefix search. Renders nothing until there is something to show. */
+const LANGUAGE_NAMES: Record<GlossLanguage, string> = { en: 'English', fr: 'French' };
+
 export default function DictionarySuggestions({
   query,
   onPick,
@@ -39,8 +41,10 @@ export default function DictionarySuggestions({
         const gloss = glossesFor(entry, settings.suggestionLanguage);
         const meaning = gloss.meanings.join('; ');
         return (
-          // Merged entries can share a headword across readings, so the
-          // simplified form alone is no longer unique.
+          // `simplified|pinyin` is better than `simplified` alone but still not
+          // guaranteed unique: CC-CEDICT can carry multiple traditional forms
+          // for the same simplified/pinyin pair (e.g. 檯/臺/颱 all map to
+          // simplified 台, pinyin tái), and those collapse to one key here.
           <li key={`${entry.simplified}|${entry.pinyin}`}>
             <button
               type="button"
@@ -51,7 +55,11 @@ export default function DictionarySuggestions({
               <PinyinText pinyin={entry.pinyin} className="text-sm" />
               <span className="flex-1 truncate text-sm text-slate-500">{meaning}</span>
               {gloss.language !== settings.suggestionLanguage && (
-                <span className="rounded bg-slate-100 px-1 text-xs text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                <span
+                  className="rounded bg-slate-100 px-1 text-xs uppercase text-slate-500 dark:bg-slate-700 dark:text-slate-400"
+                  aria-label={`shown in ${LANGUAGE_NAMES[gloss.language]}`}
+                  title={`shown in ${LANGUAGE_NAMES[gloss.language]}`}
+                >
                   {gloss.language}
                 </span>
               )}

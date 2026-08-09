@@ -20,7 +20,24 @@ function loadShard(key: string): Promise<DictEntry[]> {
   const pending = (async (): Promise<DictEntry[]> => {
     const response = await fetchImpl(`/dict/${key}.json`);
     if (!response.ok) throw new Error(`shard ${key} responded ${response.status}`);
-    return (await response.json()) as DictEntry[];
+    // meanings is a structured field (Partial<Record<GlossLanguage, string[]>>)
+    // shipped over a URL the app cannot version: /dict/<key>.json carries no
+    // hash or query param, and both the Workbox runtime cache and the
+    // Caddy-set 7-day HTTP cache can keep serving an old response body after
+    // this code has changed underneath it. If a body still uses the old
+    // shape (meanings: string[]), reading it as the new shape silently
+    // resolves to an empty gloss set instead of throwing, so this can't be
+    // caught by response.ok or a try/catch upstream. Normalising here is a
+    // permanent hedge against that class of drift, not a one-off migration —
+    // do not remove it just because every shard in the current build is
+    // already in the new shape.
+    const raw = (await response.json()) as (
+      | DictEntry
+      | (Omit<DictEntry, 'meanings'> & { meanings: string[] })
+    )[];
+    return raw.map((e): DictEntry =>
+      Array.isArray(e.meanings) ? { ...e, meanings: { en: e.meanings } } : (e as DictEntry),
+    );
   })();
   shards.set(key, pending);
   // A failed load must not be cached: evict it so a later lookup can retry.

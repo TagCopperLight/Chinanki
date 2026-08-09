@@ -71,6 +71,34 @@ describe('lookupExact', () => {
   });
 });
 
+describe('stale shard shape normalisation', () => {
+  const OLD_SHAPE_HAO = { simplified: '好', traditional: '好', pinyin: 'hǎo', meanings: ['good'] };
+
+  it('upgrades an old array-shaped shard body for lookupExact', async () => {
+    setDictionaryFetch(
+      (async () => ({ ok: true, json: async () => [OLD_SHAPE_HAO] }) as Response) as typeof fetch,
+    );
+    clearDictionaryCache();
+    expect(await lookupExact('好')).toEqual(HAO);
+  });
+
+  it('upgrades an old array-shaped shard body for lookupPrefix', async () => {
+    setDictionaryFetch(
+      (async () => ({ ok: true, json: async () => [OLD_SHAPE_HAO] }) as Response) as typeof fetch,
+    );
+    clearDictionaryCache();
+    expect(await lookupPrefix('好')).toEqual([HAO]);
+  });
+
+  it('passes a shard already in the new shape through untouched', async () => {
+    setDictionaryFetch(
+      (async () => ({ ok: true, json: async () => [HAO] }) as Response) as typeof fetch,
+    );
+    clearDictionaryCache();
+    expect(await lookupExact('好')).toEqual(HAO);
+  });
+});
+
 describe('lookupPrefix', () => {
   it('returns entries starting with the prefix, shortest first', async () => {
     const results = await lookupPrefix('好');

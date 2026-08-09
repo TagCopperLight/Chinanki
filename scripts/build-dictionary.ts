@@ -37,7 +37,12 @@ async function parseFile(path: string): Promise<{ entries: ParsedEntry[]; skippe
   let skipped = 0;
   for (const line of text.split('\n')) {
     const entry = parseCedictLine(line);
-    if (entry) entries.push(entry);
+    // A line that parses but carries no glosses (e.g. "词 词 [ci2] //") must
+    // not enter the merge: DictEntry.meanings documents "at least one
+    // language is present and non-empty", and an empty-array survivor here
+    // would break that invariant, rendering as a clickable row with a blank
+    // meaning.
+    if (entry && entry.meanings.length > 0) entries.push(entry);
     else if (line.trim() !== '' && !line.startsWith('#')) skipped++;
   }
   return { entries, skipped };
@@ -47,7 +52,7 @@ const english = await parseFile(cedictPath);
 const french = await parseFile(cfdictPath);
 const entries = mergeDictionaries(english.entries, french.entries);
 
-const withFrench = entries.filter((entry) => entry.meanings.fr !== undefined).length;
+const withFrench = entries.filter((entry) => (entry.meanings.fr?.length ?? 0) > 0).length;
 if (withFrench < MIN_FRENCH_ENTRIES) {
   console.error(
     `only ${withFrench} entries carry French glosses (expected at least ` +
