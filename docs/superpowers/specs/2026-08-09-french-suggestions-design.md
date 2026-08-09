@@ -45,7 +45,10 @@ the merge rather than being dropped.
 
 ## Data model
 
-`DictEntry.meanings` changes from `string[]` to:
+"A parsed line" and "what ships in a shard" stop being the same thing once two
+dictionaries are merged, so the type splits in two. `ParsedEntry` is what
+`parseCedictLine` returns and keeps today's `meanings: string[]`. `DictEntry` is
+what the shards carry:
 
 ```ts
 meanings: { en?: string[]; fr?: string[] }
@@ -58,7 +61,7 @@ At least one side is non-empty. Each side stays capped at 6 glosses, as today.
 New pure module `src/lib/dictionary/merge.ts`:
 
 ```ts
-export function mergeDictionaries(en: DictEntry[], fr: DictEntry[]): DictEntry[]
+export function mergeDictionaries(en: ParsedEntry[], fr: ParsedEntry[]): DictEntry[]
 ```
 
 - Key: `simplified` + normalised pinyin, where normalisation lowercases, strips
