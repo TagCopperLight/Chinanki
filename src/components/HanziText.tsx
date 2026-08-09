@@ -1,4 +1,4 @@
-import { parseAccentedPinyin } from '@/lib/pinyin';
+import { characterTones } from '@/lib/pinyin';
 import { useSettings } from '@/hooks/useSettings';
 
 /**
@@ -21,24 +21,24 @@ export default function HanziText({
   colour?: boolean;
 }) {
   const { settings } = useSettings();
-  const syllables = parseAccentedPinyin(pinyin).filter((token) => token.tone !== null);
   const characters = [...hanzi];
+  const tones = characterTones(hanzi, pinyin);
 
-  if (!colour || !settings.colourHanzi || syllables.length !== characters.length) {
+  if (!colour || !settings.colourHanzi || tones.every((tone) => tone === null)) {
     return <span className={className}>{hanzi}</span>;
   }
 
   return (
     <span className={className}>
-      {characters.map((character, index) => (
-        <span
-          key={index}
-          data-tone={syllables[index]!.tone}
-          style={{ color: settings.toneColours[syllables[index]!.tone!] }}
-        >
-          {character}
-        </span>
-      ))}
+      {characters.map((character, index) => {
+        const tone = tones[index];
+        if (tone === null || tone === undefined) return <span key={index}>{character}</span>;
+        return (
+          <span key={index} data-tone={tone} style={{ color: settings.toneColours[tone] }}>
+            {character}
+          </span>
+        );
+      })}
     </span>
   );
 }

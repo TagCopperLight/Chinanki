@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { X } from 'lucide-react';
 import { StudySession } from '@/lib/study';
-import { answerFor, promptFor, type NoteField } from '@/lib/study/prompt';
+import { answerFor, isWritingDirection, promptFor, type NoteField } from '@/lib/study/prompt';
+import { drawableCharacters } from '@/lib/writing/characters';
+import type { Stroke } from '@/lib/writing/strokes';
 import { DIRECTION_LABELS } from '@/lib/db/types';
 import type { Rating } from '@/lib/fsrs';
 import type { QueueItem } from '@/lib/study';
@@ -11,6 +13,8 @@ import EmptyState from '@/components/EmptyState';
 import HanziText from '@/components/HanziText';
 import PinyinText from '@/components/PinyinText';
 import RatingButtons from '@/components/RatingButtons';
+import WritingAnswer from '@/components/WritingAnswer';
+import WritingPrompt from '@/components/WritingPrompt';
 
 function FieldView({
   field,
@@ -49,6 +53,11 @@ export default function StudyPage() {
   const [session, setSession] = useState<StudySession | null>(null);
   const [item, setItem] = useState<QueueItem | null>(null);
   const [revealed, setRevealed] = useState(false);
+  // Writing cards only. Drawings are deliberately not persisted: they exist to
+  // be compared against the answer once, then thrown away.
+  const [charIndex, setCharIndex] = useState(0);
+  const [drawings, setDrawings] = useState<Stroke[][]>([]);
+  const [ghost, setGhost] = useState(true);
   const [tick, setTick] = useState(0);
   const [error, setError] = useState('');
   const shownAt = useRef(Date.now());
@@ -81,6 +90,9 @@ export default function StudyPage() {
         await session.answer(rating, Date.now(), Date.now() - shownAt.current);
         setItem(session.current);
         setRevealed(false);
+        setCharIndex(0);
+        setDrawings([]);
+        setGhost(true);
         shownAt.current = Date.now();
         setTick((value) => value + 1);
       } finally {
@@ -95,9 +107,16 @@ export default function StudyPage() {
     await session.undo();
     setItem(session.current);
     setRevealed(false);
+    setCharIndex(0);
+    setDrawings([]);
+    setGhost(true);
     shownAt.current = Date.now();
     setTick((value) => value + 1);
   }, [session]);
+
+  const writing = item !== null && isWritingDirection(item.card.direction);
+  const characters = writing && item ? drawableCharacters(item.note.hanzi, item.note.pinyin) : [];
+  const moreCharacters = writing && charIndex < characters.length - 1;
 
   // Keyboard shortcuts make desktop review fast; the buttons stay the mobile
   // path. Scope: this global listener only acts when focus is NOT on an
@@ -117,6 +136,8 @@ export default function StudyPage() {
       if (event.key === ' ' || event.key === 'Enter') {
         event.preventDefault();
         if (revealed) void rate(3);
+        else if (moreCharacters)
+          setCharIndex((index) => Math.min(index + 1, characters.length - 1));
         else setRevealed(true);
       } else if (revealed && ['1', '2', '3', '4'].includes(event.key)) {
         void rate(Number(event.key) as Rating);
@@ -124,7 +145,11 @@ export default function StudyPage() {
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [revealed, rate]);
+    // characters.length is read in onKey but deliberately left out of this
+    // array: it only changes when the card changes, and every card change
+    // also flips revealed or moreCharacters, which already forces onKey to
+    // be re-registered with the new value in its closure.
+  }, [revealed, rate, moreCharacters]);
 
   if (error) {
     return (
@@ -191,11 +216,34 @@ export default function StudyPage() {
           <FieldView field={promptFor(item.card.direction)} item={item} large colour={revealed} />
         </div>
 
+        {writing && !revealed && characters.length > 0 && (
+          <WritingPrompt
+            count={characters.length}
+            index={charIndex}
+            strokes={drawings}
+            onStrokesChange={(index, strokes) =>
+              setDrawings((previous) => {
+                const next = [...previous];
+                next[index] = strokes;
+                return next;
+              })
+            }
+          />
+        )}
+
         {revealed && (
           <div
             data-testid="answer"
             className="w-full space-y-3 border-t border-slate-200 pt-6 dark:border-slate-700"
           >
+            {writing && (
+              <WritingAnswer
+                characters={characters}
+                strokes={drawings}
+                ghost={ghost}
+                onToggleGhost={() => setGhost((shown) => !shown)}
+              />
+            )}
             <div className="font-semibold">
               <FieldView field={answerFor(item.card.direction)} item={item} large={false} />
             </div>
@@ -223,12 +271,24 @@ export default function StudyPage() {
       <footer className="space-y-2 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)]">
         {revealed ? (
           <RatingButtons previews={session.previews(now)} now={now} onRate={rate} />
+        ) : moreCharacters ? (
+          <Button
+            className="min-h-14 w-full"
+            onClick={() => setCharIndex((index) => Math.min(index + 1, characters.length - 1))}
+          >
+            Next
+          </Button>
         ) : (
           <Button className="min-h-14 w-full" onClick={() => setRevealed(true)}>
             Show answer
           </Button>
         )}
-        <div className="flex justify-center">
+        <div className="flex justify-center gap-2">
+          {!revealed && moreCharacters && (
+            <Button variant="ghost" onClick={() => setRevealed(true)}>
+              Show answer
+            </Button>
+          )}
           <Button variant="ghost" disabled={counts.answered === 0} onClick={undo}>
             Undo
           </Button>

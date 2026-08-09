@@ -3,13 +3,21 @@ import type { GlossLanguage } from '@/lib/dictionary/types';
 
 export type { CardState };
 
-export type Direction = 'hanzi-meaning' | 'hanzi-pinyin' | 'meaning-pinyin' | 'pinyin-meaning';
+export type Direction =
+  | 'hanzi-meaning'
+  | 'hanzi-pinyin'
+  | 'meaning-pinyin'
+  | 'pinyin-meaning'
+  | 'meaning-hanzi'
+  | 'pinyin-hanzi';
 
 export const ALL_DIRECTIONS: readonly Direction[] = [
   'hanzi-meaning',
   'hanzi-pinyin',
   'meaning-pinyin',
   'pinyin-meaning',
+  'meaning-hanzi',
+  'pinyin-hanzi',
 ];
 
 export const DIRECTION_LABELS: Record<Direction, string> = {
@@ -17,6 +25,8 @@ export const DIRECTION_LABELS: Record<Direction, string> = {
   'hanzi-pinyin': '汉字 → Pinyin',
   'meaning-pinyin': 'Meaning → Pinyin',
   'pinyin-meaning': 'Pinyin → Meaning',
+  'meaning-hanzi': 'Meaning → 汉字',
+  'pinyin-hanzi': 'Pinyin → 汉字',
 };
 
 export interface Deck {

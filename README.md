@@ -1,9 +1,10 @@
 # Chinanki
 
 A local-first, installable web app for learning Mandarin vocabulary. Cards go in
-four directions (hanzi → meaning, hanzi → pinyin, meaning → pinyin, pinyin →
-meaning), each scheduled independently by FSRS-4.5. Everything is stored in your
-browser — no account, no server.
+six directions (hanzi → meaning, hanzi → pinyin, meaning → pinyin, pinyin →
+meaning, and the two writing directions meaning → hanzi and pinyin → hanzi where
+you draw the character), each scheduled independently by FSRS-4.5. Everything is
+stored in your browser — no account, no server.
 
 ## Development
 
