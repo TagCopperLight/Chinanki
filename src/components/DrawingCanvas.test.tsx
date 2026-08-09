@@ -59,7 +59,7 @@ describe('DrawingCanvas', () => {
     expect(onStrokesChange).toHaveBeenCalledTimes(1);
   });
 
-  it('ignores later moves once the active pointer has lifted', () => {
+  it('ignores moves from a pointer after that same pointer has lifted', () => {
     const onStrokesChange = vi.fn();
     const { rerender } = render(
       <DrawingCanvas strokes={[]} onStrokesChange={onStrokesChange} label="Draw" />,
@@ -73,6 +73,32 @@ describe('DrawingCanvas', () => {
     fireEvent.pointerUp(canvas, { pointerId: 1 });
     fireEvent.pointerMove(canvas, { pointerId: 1, clientX: 5, clientY: 5 });
     expect(onStrokesChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps drawing with the active pointer after a stray cancel from another pointer', () => {
+    const onStrokesChange = vi.fn();
+    const { rerender } = render(
+      <DrawingCanvas strokes={[]} onStrokesChange={onStrokesChange} label="Draw" />,
+    );
+    const canvas = screen.getByRole('img', { name: 'Draw' });
+    canvas.setPointerCapture = () => {};
+    // jsdom reports a zero-size rect by default, which would normalise every
+    // point to the same (0, 0) and hide any growth in the stroke.
+    canvas.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 100, height: 100 }) as DOMRect;
+    fireEvent.pointerDown(canvas, { pointerId: 1, clientX: 0, clientY: 0 });
+    const strokesAfterDown = onStrokesChange.mock.calls[0]![0];
+    rerender(<DrawingCanvas strokes={strokesAfterDown} onStrokesChange={onStrokesChange} label="Draw" />);
+
+    // A stray cancel from a pointer that never started a stroke (e.g. a palm
+    // touch) must not tear down pointer 1's in-progress stroke.
+    fireEvent.pointerCancel(canvas, { pointerId: 2 });
+    fireEvent.pointerMove(canvas, { pointerId: 1, clientX: 5, clientY: 5 });
+
+    expect(onStrokesChange).toHaveBeenCalledTimes(2);
+    const strokesAfterMove = onStrokesChange.mock.calls[1]![0];
+    expect(strokesAfterMove).toHaveLength(1);
+    expect(strokesAfterMove[0].length).toBeGreaterThan(strokesAfterDown[0].length);
   });
 
   it('takes no pointer input when read-only', () => {
