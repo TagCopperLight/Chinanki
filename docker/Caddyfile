@@ -10,9 +10,16 @@
 	@dict path /dict/*
 	header @dict Cache-Control "public, max-age=604800"
 
-	# Unhashed filenames. If these are cached, a bad deploy pins users to a broken
-	# build with no remote way to recover.
-	@revalidate path / /index.html /sw.js /manifest.webmanifest /registerSW.js
+	# Everything else must revalidate: the app shell, unhashed files (sw.js,
+	# manifest.webmanifest, registerSW.js, icons), and every client-side route
+	# (/stats, /deck/:id, /settings, ...). `header` runs before `try_files`
+	# rewrites the request path, so a matcher can't enumerate client-side routes
+	# by literal path — it would only ever see the original, un-rewritten path
+	# and silently miss any route not listed. Negating over the two prefixes
+	# that are genuinely safe to cache long-term instead covers every current
+	# and future route with no Caddyfile maintenance. If these are cached, a bad
+	# deploy pins users to a broken build with no remote way to recover.
+	@revalidate not path /assets/* /dict/*
 	header @revalidate Cache-Control "no-cache"
 
 	# Client-side routing: /stats and friends have no file behind them.

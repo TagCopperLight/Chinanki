@@ -79,6 +79,17 @@ check "sw.js is no-cache" "$hdr" "cache-control: no-cache"
 hdr=$(curl -sI "http://localhost:$PORT/manifest.webmanifest")
 check "manifest is no-cache" "$hdr" "cache-control: no-cache"
 
+# Client-side routes are served via the SPA fallback, so they must revalidate too —
+# otherwise a heuristically-cached stale app shell can reference pruned asset files.
+hdr=$(curl -sI "http://localhost:$PORT/stats")
+check "/stats is no-cache" "$hdr" "cache-control: no-cache"
+
+hdr=$(curl -sI "http://localhost:$PORT/deck/1/browse")
+check "/deck/1/browse is no-cache" "$hdr" "cache-control: no-cache"
+
+hdr=$(curl -sI "http://localhost:$PORT/icon-192.png")
+check "/icon-192.png is no-cache" "$hdr" "cache-control: no-cache"
+
 # Vite content-hashes these, so they must be immutable or every visit refetches them.
 asset=$(curl -s "http://localhost:$PORT/" | grep -o '/assets/[^"]*\.js' | head -1)
 if [ -z "$asset" ]; then
