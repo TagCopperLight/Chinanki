@@ -90,9 +90,9 @@ docker compose up -d --build
 # `docker compose up -d` returns as soon as the container has STARTED, not
 # once it's actually serving — a Caddyfile syntax error, a bad /srv copy, or
 # a crash loop would all still leave this script printing "Done" while the
-# site is down. This must run BEFORE the last-good update and the prune
-# below: if it fails, `set -e` stops the script right here, so
-# chinanki:last-good is left exactly as it was.
+# site is down. This must run BEFORE the last-good update below: if it fails,
+# `set -e` stops the script right here, so chinanki:last-good is left exactly
+# as it was.
 echo "==> Verifying the site is reachable"
 if ! check_reachable "$WEB_CHECK_RETRIES"; then
   echo "FAIL: chinanki did not become reachable at $WEB_CHECK_URL on the web network." >&2
@@ -106,11 +106,20 @@ if [ "$outgoing_trustworthy" -eq 1 ]; then
   docker image tag chinanki:staging chinanki:last-good
 fi
 
-echo "==> Pruning dangling images (this project only)"
-# Global `docker image prune -f` would delete dangling images left behind by
-# any project on this box (vaultwarden, gripsou, roadia, ...). Scope it to
-# images built from this Dockerfile via the OCI title label.
-docker image prune -f --filter "label=org.opencontainers.image.title=chinanki"
+# Deliberately NO image pruning here.
+#
+# This box is shared with other services, including a password manager. Every
+# command in this script is scoped to a `chinanki:*` tag or to the single
+# service in compose.yaml — nothing here can reach another project's images,
+# containers, volumes or networks.
+#
+# An automatic `docker image prune` would be the one exception: a destructive
+# command whose blast radius depends on a filter staying correct forever. It
+# was scoped by an OCI label, but that label is INHERITED from caddy:2-alpine
+# and merely overridden by our Dockerfile — one careless edit away from
+# matching every Caddy-derived image on the host, including the central proxy.
+# Reclaiming a little disk is not worth that, so cleanup is manual and opt-in.
+# See the README for a scoped cleanup command.
 
 echo "==> Done. Deployed:"
 git --no-pager log -1 --oneline

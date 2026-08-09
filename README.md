@@ -104,6 +104,43 @@ confirmation and the design spec requires it:
 `deploy.sh` builds before recreating the container, so a failed build leaves the
 running site untouched.
 
+### Blast radius on a shared host
+
+Every command in `deploy.sh`, `rollback.sh` and `compose.yaml` is scoped either
+to a `chinanki:*` image tag or to the single service declared in
+`compose.yaml`. Nothing here can reach another project's containers, images,
+volumes or networks:
+
+- no `docker system prune`, no `docker volume prune`, no `docker compose down -v`
+- `compose.yaml` declares **no volumes** — the container is stateless, so there
+  is no server-side data to lose in the first place
+- the `web` network is declared `external: true`, so Compose uses it but never
+  creates, modifies or removes it
+
+`deploy.sh` deliberately does **not** prune images. Disk cleanup is manual and
+opt-in, so no unattended destructive command runs on a shared box. When you do
+want to reclaim space, this is scoped to images built from this project's
+Dockerfile:
+
+```bash
+docker image prune -f --filter "label=org.opencontainers.image.title=chinanki"
+```
+
+Check what it would remove first — a filter that matches nothing is safe, a
+filter that matches too much is not:
+
+```bash
+docker images --filter "dangling=true" \
+              --filter "label=org.opencontainers.image.title=chinanki"
+```
+
+Note that `org.opencontainers.image.title` is inherited from `caddy:2-alpine`
+and only overridden by this project's `Dockerfile`. If that `LABEL` is ever
+removed, the filter silently stops matching (harmless), but a filter written
+against the inherited value `Caddy` would match Caddy-derived images across the
+whole host. Prefer the label above, or Compose's own
+`label=com.docker.compose.project=chinanki`.
+
 ### Refreshing the dictionary
 
 CC-CEDICT is downloaded during the image build and pinned by Docker's layer
