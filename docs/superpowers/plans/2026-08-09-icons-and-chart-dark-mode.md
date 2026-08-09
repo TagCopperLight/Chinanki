@@ -19,6 +19,7 @@
 - Chart series colours `#0284c7` and `#16a34a` stay exactly as they are. They were validated against both the light `#f8fafc` and dark `#0f172a` surfaces and pass all six checks. Do not "improve" them.
 - `src/components/Heatmap.tsx` is already dark-mode correct. Do not touch it.
 - Commit after every task, using Conventional Commits prefixes (`feat:`, `fix:`, `docs:`) as the existing history does.
+- **Do not assert on Tailwind class strings in tests.** jsdom cannot compute Tailwind styles, so such assertions test markup rather than behaviour and break on any restyle. Dark-mode appearance is verified by the manual check in Task 4, not by unit tests. Assertions on inline `style` values (which jsdom does compute) are fine.
 
 ---
 
@@ -231,13 +232,6 @@ describe('PageHeader', () => {
     expect(back.querySelector('svg')).toBeInTheDocument();
     expect(back.textContent).toBe('');
   });
-
-  it('keeps the 44px touch target on the back control', () => {
-    renderHeader({ title: 'HSK 1', backTo: '/' });
-    const back = screen.getByRole('button', { name: 'Back' });
-    expect(back.className).toContain('min-h-11');
-    expect(back.className).toContain('min-w-11');
-  });
 });
 ```
 
@@ -423,17 +417,6 @@ describe('ChartTooltip', () => {
     expect(screen.getByText('n/a')).toBeInTheDocument();
   });
 
-  it('carries a dark-mode surface so the tooltip is readable on a dark background', () => {
-    const { container } = render(
-      <ChartTooltip active label="2026-08-09" payload={[{ name: 'Due', value: 12 }]} />,
-    );
-
-    const surface = container.firstElementChild as HTMLElement;
-    expect(surface.className).toContain('bg-white');
-    expect(surface.className).toContain('dark:bg-slate-800');
-    expect(surface.className).toContain('dark:text-slate-100');
-  });
-
   it('takes the swatch colour from fill, stroke or color', () => {
     const { container } = render(
       <ChartTooltip active label="2026-08-09" payload={[{ name: 'Due', value: 12, fill: '#0284c7' }]} />,
@@ -522,7 +505,7 @@ export default function ChartTooltip({ active, label, payload, formatValue }: Ch
 npx vitest run src/components/ChartTooltip.test.tsx
 ```
 
-Expected: PASS, 7 tests.
+Expected: PASS, 6 tests.
 
 - [ ] **Step 5: Typecheck**
 
