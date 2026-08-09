@@ -4,9 +4,9 @@ import type { DictEntry, GlossLanguage } from '@/lib/dictionary';
 import { useSettings } from '@/hooks/useSettings';
 import PinyinText from '@/components/PinyinText';
 
-/** Debounced prefix search. Renders nothing until there is something to show. */
 const LANGUAGE_NAMES: Record<GlossLanguage, string> = { en: 'English', fr: 'French' };
 
+/** Debounced prefix search. Renders nothing until there is something to show. */
 export default function DictionarySuggestions({
   query,
   onPick,
@@ -56,6 +56,11 @@ export default function DictionarySuggestions({
               <span className="flex-1 truncate text-sm text-slate-500">{meaning}</span>
               {gloss.language !== settings.suggestionLanguage && (
                 <span
+                  // role="img": a bare span has the implicit `generic` role, which ARIA 1.2
+                  // prohibits naming — browsers may ignore aria-label on it when computing
+                  // the ancestor button's accessible name. `img` permits naming, so don't
+                  // remove this thinking it's redundant.
+                  role="img"
                   className="rounded bg-slate-100 px-1 text-xs uppercase text-slate-500 dark:bg-slate-700 dark:text-slate-400"
                   aria-label={`shown in ${LANGUAGE_NAMES[gloss.language]}`}
                   title={`shown in ${LANGUAGE_NAMES[gloss.language]}`}
