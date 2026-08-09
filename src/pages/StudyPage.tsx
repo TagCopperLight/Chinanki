@@ -185,6 +185,8 @@ export default function StudyPage() {
         key={tick}
       >
         <div data-testid="prompt">
+          {/* colour only affects the hanzi branch of FieldView; it's a no-op
+              when the prompt field is pinyin or meaning. */}
           <FieldView field={promptFor(item.card.direction)} item={item} large colour={revealed} />
         </div>
 

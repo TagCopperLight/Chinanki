@@ -77,10 +77,14 @@ describe('NoteEditorPage: creating', () => {
     await user.click(await screen.findByRole('button', { name: /好人/ }));
     await waitFor(() => expect(screen.getByLabelText('Pinyin')).toHaveValue('hǎo rén'));
 
+    // The suggestion list narrows to entries starting with the picked hanzi
+    // ('好人'), so the '好' suggestion is no longer on screen. Retype '好' to
+    // get back to a state where a different suggestion can be picked.
+    await user.clear(screen.getByLabelText('Hanzi'));
+    await user.type(screen.getByLabelText('Hanzi'), '好');
     await user.click(await screen.findByRole('button', { name: /good; well/ }));
 
-    await waitFor(() => expect(screen.getByLabelText('Hanzi')).toHaveValue('好'));
-    expect(screen.getByLabelText('Pinyin')).toHaveValue('hǎo');
+    await waitFor(() => expect(screen.getByLabelText('Pinyin')).toHaveValue('hǎo'));
     expect(screen.getByLabelText('Meaning')).toHaveValue('good; well');
   });
 
