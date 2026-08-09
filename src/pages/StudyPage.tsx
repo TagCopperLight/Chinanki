@@ -136,7 +136,8 @@ export default function StudyPage() {
       if (event.key === ' ' || event.key === 'Enter') {
         event.preventDefault();
         if (revealed) void rate(3);
-        else if (moreCharacters) setCharIndex((index) => index + 1);
+        else if (moreCharacters)
+          setCharIndex((index) => Math.min(index + 1, characters.length - 1));
         else setRevealed(true);
       } else if (revealed && ['1', '2', '3', '4'].includes(event.key)) {
         void rate(Number(event.key) as Rating);
@@ -267,7 +268,10 @@ export default function StudyPage() {
         {revealed ? (
           <RatingButtons previews={session.previews(now)} now={now} onRate={rate} />
         ) : moreCharacters ? (
-          <Button className="min-h-14 w-full" onClick={() => setCharIndex(charIndex + 1)}>
+          <Button
+            className="min-h-14 w-full"
+            onClick={() => setCharIndex((index) => Math.min(index + 1, characters.length - 1))}
+          >
             Next
           </Button>
         ) : (

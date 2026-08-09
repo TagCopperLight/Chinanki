@@ -280,6 +280,16 @@ describe('StudyPage', () => {
 
     it('starts the next card back at the first character with a clean box', async () => {
       const user = await renderWritingCard(true);
+
+      // Draw on the first character so the reset has something to clear:
+      // without it, "Undo stroke" would be disabled on the next card
+      // regardless of whether drawings are actually reset.
+      const canvas = await screen.findByRole('img', { name: 'Draw character 1 of 2' });
+      canvas.setPointerCapture = () => {};
+      fireEvent.pointerDown(canvas, { pointerId: 1, clientX: 0, clientY: 0 });
+      fireEvent.pointerUp(canvas, { pointerId: 1 });
+      expect(screen.getByRole('button', { name: 'Undo stroke' })).toBeEnabled();
+
       await user.click(await screen.findByRole('button', { name: 'Next' }));
       await user.click(await screen.findByRole('button', { name: 'Show answer' }));
       await user.click(await screen.findByRole('button', { name: /Easy/ }));
@@ -287,6 +297,33 @@ describe('StudyPage', () => {
       await waitFor(() =>
         expect(screen.getByTestId('writing-progress')).toHaveTextContent('1 / 2'),
       );
+      expect(screen.getByRole('button', { name: 'Undo stroke' })).toBeDisabled();
+    });
+
+    it('clears a drawing when the review is undone', async () => {
+      // rate() already clears drawings on its own, so drawing on the first
+      // card and then undoing proves nothing: by the time undo() runs there
+      // is nothing left for it to clear. The only way to make undo's own
+      // reset load-bearing is to draw on the *second* card (the one undo
+      // navigates away from) and confirm that drawing does not leak onto the
+      // restored first card.
+      const user = await renderWritingCard(true);
+      await user.click(await screen.findByRole('button', { name: 'Next' }));
+      await user.click(await screen.findByRole('button', { name: 'Show answer' }));
+      await user.click(await screen.findByRole('button', { name: /Easy/ }));
+
+      await waitFor(() =>
+        expect(screen.getByTestId('writing-progress')).toHaveTextContent('1 / 2'),
+      );
+      const secondCardCanvas = await screen.findByRole('img', { name: 'Draw character 1 of 2' });
+      secondCardCanvas.setPointerCapture = () => {};
+      fireEvent.pointerDown(secondCardCanvas, { pointerId: 1, clientX: 0, clientY: 0 });
+      fireEvent.pointerUp(secondCardCanvas, { pointerId: 1 });
+      expect(screen.getByRole('button', { name: 'Undo stroke' })).toBeEnabled();
+
+      await user.click(await screen.findByRole('button', { name: 'Undo' }));
+
+      await waitFor(() => expect(screen.getByTestId('prompt')).toHaveTextContent('bookshop'));
       expect(screen.getByRole('button', { name: 'Undo stroke' })).toBeDisabled();
     });
   });
