@@ -43,7 +43,7 @@ export default function DictionarySuggestions({
             <span className="text-lg">{entry.simplified}</span>
             <PinyinText pinyin={entry.pinyin} className="text-sm" />
             <span className="flex-1 truncate text-sm text-slate-500">
-              {entry.meanings.join('; ')}
+              {(entry.meanings.en ?? []).join('; ')}
             </span>
           </button>
         </li>

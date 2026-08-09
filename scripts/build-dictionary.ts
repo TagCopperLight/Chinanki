@@ -23,22 +23,27 @@ const outputDir = join(process.cwd(), 'public', 'dict');
 const text = await readFile(source, 'utf8');
 
 const buckets = new Map<string, DictEntry[]>();
-let parsed = 0;
+let parsedCount = 0;
 let skipped = 0;
 
 for (const line of text.split('\n')) {
-  const entry = parseCedictLine(line);
-  if (!entry) {
+  const parsed = parseCedictLine(line);
+  if (!parsed) {
     if (line.trim() !== '' && !line.startsWith('#')) skipped++;
     continue;
   }
   // Trim the long tail of glosses; the editor only ever shows the first few.
-  entry.meanings = entry.meanings.slice(0, 6);
+  const entry: DictEntry = {
+    simplified: parsed.simplified,
+    traditional: parsed.traditional,
+    pinyin: parsed.pinyin,
+    meanings: { en: parsed.meanings.slice(0, 6) },
+  };
   const key = shardKeyFor(entry.simplified);
   const bucket = buckets.get(key) ?? [];
   bucket.push(entry);
   buckets.set(key, bucket);
-  parsed++;
+  parsedCount++;
 }
 
 await rm(outputDir, { recursive: true, force: true });
@@ -53,7 +58,7 @@ for (const [key, entries] of buckets) {
 }
 
 console.log(
-  `${parsed} entries, ${skipped} skipped, ${buckets.size} shards, ` +
+  `${parsedCount} entries, ${skipped} skipped, ${buckets.size} shards, ` +
     `${(bytes / 1024 / 1024).toFixed(1)} MB total, ` +
     `${(bytes / buckets.size / 1024).toFixed(0)} KB average shard`,
 );

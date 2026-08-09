@@ -51,7 +51,7 @@ export default function NoteEditorPage() {
   function applySuggestion(entry: DictEntry) {
     setHanzi(entry.simplified);
     setPinyin(entry.pinyin);
-    setMeaning(entry.meanings.join('; '));
+    setMeaning((entry.meanings.en ?? []).join('; '));
   }
 
   async function save() {

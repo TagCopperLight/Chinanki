@@ -11,8 +11,8 @@ import NoteEditorPage from '@/pages/NoteEditorPage';
 let deckId: number;
 
 const ENTRIES = [
-  { simplified: '好', traditional: '好', pinyin: 'hǎo', meanings: ['good', 'well'] },
-  { simplified: '好人', traditional: '好人', pinyin: 'hǎo rén', meanings: ['good person'] },
+  { simplified: '好', traditional: '好', pinyin: 'hǎo', meanings: { en: ['good', 'well'] } },
+  { simplified: '好人', traditional: '好人', pinyin: 'hǎo rén', meanings: { en: ['good person'] } },
 ];
 
 beforeEach(async () => {

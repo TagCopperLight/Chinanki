@@ -31,4 +31,14 @@ describe('parseCedictLine', () => {
   it('returns null for a malformed line', () => {
     expect(parseCedictLine('nonsense without brackets')).toBeNull();
   });
+
+  it('parses a CFDICT line the same way as a CC-CEDICT one', () => {
+    const entry = parseCedictLine('綠 绿 [lu:4] /vert/verdure/');
+    expect(entry).toEqual({
+      traditional: '綠',
+      simplified: '绿',
+      pinyin: 'lǜ',
+      meanings: ['vert', 'verdure'],
+    });
+  });
 });
