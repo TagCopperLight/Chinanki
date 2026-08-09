@@ -77,9 +77,12 @@ itself.
 
 ### `src/components/ChartTooltip.tsx` (new)
 
-One tooltip renderer shared by both charts, typed against Recharts'
-`TooltipContentProps`. It renders the category label, then one row per payload
-entry: a small swatch in the series colour, the series name, and the value.
+One tooltip renderer shared by both charts, typed against a narrow local prop
+type rather than Recharts' `TooltipContentProps`, since that type marks
+`payload`, `coordinate`, `active`, `accessibilityLayer` and `activeIndex` as
+required, which would make the component impossible to render directly in a
+test. It renders the category label, then one row per payload entry: a small
+swatch in the series colour, the series name, and the value.
 
 Surface: `bg-white dark:bg-slate-800`, `border border-slate-200
 dark:border-slate-700`, `rounded-lg`, `shadow-md`. Value text in

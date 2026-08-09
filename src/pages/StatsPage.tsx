@@ -185,7 +185,7 @@ export default function StatsPage() {
                         }
                         cursor={{ className: 'stroke-slate-300 dark:stroke-slate-600' }}
                       />
-                      <Line type="monotone" dataKey="rate" stroke="#16a34a" dot={false} />
+                      <Line type="monotone" dataKey="rate" name="Retention" stroke="#16a34a" dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>

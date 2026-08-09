@@ -55,7 +55,7 @@ describe('ChartTooltip', () => {
     expect(screen.getByText('n/a')).toBeInTheDocument();
   });
 
-  it('takes the swatch colour from fill, stroke or color', () => {
+  it('takes the swatch colour from fill when color is absent', () => {
     const { container } = render(
       <ChartTooltip active label="2026-08-09" payload={[{ name: 'Due', value: 12, fill: '#0284c7' }]} />,
     );
@@ -63,5 +63,19 @@ describe('ChartTooltip', () => {
     const swatch = container.querySelector('[data-testid="tooltip-swatch"]') as HTMLElement;
     expect(swatch).toBeInTheDocument();
     expect(swatch.style.backgroundColor).toBe('rgb(2, 132, 199)');
+  });
+
+  it('prefers color over fill for the swatch, since Recharts always sets color', () => {
+    const { container } = render(
+      <ChartTooltip
+        active
+        label="2026-08-09"
+        payload={[{ name: 'rate', value: 0.87, color: '#16a34a', fill: '#fff' }]}
+      />,
+    );
+
+    const swatch = container.querySelector('[data-testid="tooltip-swatch"]') as HTMLElement;
+    expect(swatch).toBeInTheDocument();
+    expect(swatch.style.backgroundColor).toBe('rgb(22, 163, 74)');
   });
 });
