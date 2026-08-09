@@ -14,15 +14,20 @@ npm run dev
 
 ### Dictionary
 
-Auto-fill needs CC-CEDICT, which is not committed:
+Auto-fill needs two dictionaries, neither committed: CC-CEDICT for English and
+CFDICT for French.
 
 ```bash
 curl -L https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz \
   | gunzip > /tmp/cedict.u8
-npm run build:dict -- /tmp/cedict.u8
+curl -L https://chine.in/mandarin/dictionnaire/CFDICT/cfdict.zip -o /tmp/cfdict.zip
+unzip -o -d /tmp /tmp/cfdict.zip
+npm run build:dict -- /tmp/cedict.u8 /tmp/cfdict.u8
 ```
 
-CC-CEDICT is licensed CC BY-SA 4.0.
+They are merged into one set of shards, so each entry carries whichever of the
+two languages has it. CC-CEDICT is licensed CC BY-SA 4.0 and CFDICT CC BY-SA
+3.0.
 
 ### Checks
 
