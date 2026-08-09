@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { lookupPrefix } from '@/lib/dictionary';
+import { glossesFor, lookupPrefix } from '@/lib/dictionary';
 import type { DictEntry } from '@/lib/dictionary';
+import { useSettings } from '@/hooks/useSettings';
 import PinyinText from '@/components/PinyinText';
 
 /** Debounced prefix search. Renders nothing until there is something to show. */
@@ -9,8 +10,9 @@ export default function DictionarySuggestions({
   onPick,
 }: {
   query: string;
-  onPick: (entry: DictEntry) => void;
+  onPick: (entry: DictEntry, meaning: string) => void;
 }) {
+  const { settings } = useSettings();
   const [entries, setEntries] = useState<DictEntry[]>([]);
 
   useEffect(() => {
@@ -33,21 +35,30 @@ export default function DictionarySuggestions({
 
   return (
     <ul className="divide-y divide-slate-200 rounded-xl border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
-      {entries.map((entry) => (
-        <li key={entry.simplified}>
-          <button
-            type="button"
-            onClick={() => onPick(entry)}
-            className="flex w-full min-h-11 items-baseline gap-2 px-3 py-2 text-left"
-          >
-            <span className="text-lg">{entry.simplified}</span>
-            <PinyinText pinyin={entry.pinyin} className="text-sm" />
-            <span className="flex-1 truncate text-sm text-slate-500">
-              {(entry.meanings.en ?? []).join('; ')}
-            </span>
-          </button>
-        </li>
-      ))}
+      {entries.map((entry) => {
+        const gloss = glossesFor(entry, settings.suggestionLanguage);
+        const meaning = gloss.meanings.join('; ');
+        return (
+          // Merged entries can share a headword across readings, so the
+          // simplified form alone is no longer unique.
+          <li key={`${entry.simplified}|${entry.pinyin}`}>
+            <button
+              type="button"
+              onClick={() => onPick(entry, meaning)}
+              className="flex w-full min-h-11 items-baseline gap-2 px-3 py-2 text-left"
+            >
+              <span className="text-lg">{entry.simplified}</span>
+              <PinyinText pinyin={entry.pinyin} className="text-sm" />
+              <span className="flex-1 truncate text-sm text-slate-500">{meaning}</span>
+              {gloss.language !== settings.suggestionLanguage && (
+                <span className="rounded bg-slate-100 px-1 text-xs text-slate-500 dark:bg-slate-700 dark:text-slate-400">
+                  {gloss.language}
+                </span>
+              )}
+            </button>
+          </li>
+        );
+      })}
     </ul>
   );
 }

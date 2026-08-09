@@ -47,11 +47,13 @@ export default function NoteEditorPage() {
   /**
    * Overwrites all three fields. Picking a second suggestion must visibly
    * correct a wrong first pick, which a fill-only-if-blank rule cannot do.
+   * The meaning is resolved by the suggestion list, which owns the language
+   * choice — re-resolving it here would let the two disagree.
    */
-  function applySuggestion(entry: DictEntry) {
+  function applySuggestion(entry: DictEntry, meaning: string) {
     setHanzi(entry.simplified);
     setPinyin(entry.pinyin);
-    setMeaning((entry.meanings.en ?? []).join('; '));
+    setMeaning(meaning);
   }
 
   async function save() {
