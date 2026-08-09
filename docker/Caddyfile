@@ -1,0 +1,21 @@
+:80 {
+	root * /srv
+	encode gzip zstd
+
+	# Vite content-hashes these filenames, so they can never go stale.
+	@immutable path /assets/*
+	header @immutable Cache-Control "public, max-age=31536000, immutable"
+
+	# 128 dictionary shards, content-stable, ~113 KB each. Worth caching hard.
+	@dict path /dict/*
+	header @dict Cache-Control "public, max-age=604800"
+
+	# Unhashed filenames. If these are cached, a bad deploy pins users to a broken
+	# build with no remote way to recover.
+	@revalidate path / /index.html /sw.js /manifest.webmanifest /registerSW.js
+	header @revalidate Cache-Control "no-cache"
+
+	# Client-side routing: /stats and friends have no file behind them.
+	try_files {path} {path}/ /index.html
+	file_server
+}
