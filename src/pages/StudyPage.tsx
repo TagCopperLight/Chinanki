@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
+import { X } from 'lucide-react';
 import { StudySession } from '@/lib/study';
 import { answerFor, promptFor, type NoteField } from '@/lib/study/prompt';
 import { DIRECTION_LABELS } from '@/lib/db/types';
@@ -149,9 +150,9 @@ export default function StudyPage() {
           type="button"
           aria-label="Close"
           onClick={() => navigate(`/deck/${deckId}`)}
-          className="min-h-11 min-w-11 text-xl text-slate-500"
+          className="flex min-h-11 min-w-11 items-center justify-center text-slate-500"
         >
-          ✕
+          <X size={20} />
         </button>
         <span className="flex-1 text-center text-xs text-slate-500">
           {DIRECTION_LABELS[item.card.direction]}

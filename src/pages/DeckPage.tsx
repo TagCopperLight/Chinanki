@@ -1,4 +1,5 @@
 import { Link, useNavigate, useParams } from 'react-router';
+import { Settings } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { getDeck } from '@/lib/db/decks';
 import { db } from '@/lib/db/db';
@@ -36,10 +37,10 @@ export default function DeckPage() {
         action={
           <Link
             to={`/deck/${deckId}/settings`}
-            className="flex min-h-11 min-w-11 items-center justify-center px-2 py-2 text-xl"
+            className="flex min-h-11 min-w-11 items-center justify-center px-2 py-2 text-slate-500"
             aria-label="Deck settings"
           >
-            ⚙️
+            <Settings size={20} />
           </Link>
         }
       />

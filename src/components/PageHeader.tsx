@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router';
+import { ChevronLeft } from 'lucide-react';
 
 export default function PageHeader({
   title,
@@ -18,9 +19,9 @@ export default function PageHeader({
           type="button"
           aria-label="Back"
           onClick={() => navigate(backTo)}
-          className="min-h-11 min-w-11 text-xl text-slate-500"
+          className="flex min-h-11 min-w-11 items-center justify-center text-slate-500"
         >
-          ←
+          <ChevronLeft size={20} />
         </button>
       )}
       <h1 className="flex-1 truncate text-xl font-bold">{title}</h1>
