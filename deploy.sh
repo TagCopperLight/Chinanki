@@ -119,7 +119,7 @@ fi
 # and merely overridden by our Dockerfile — one careless edit away from
 # matching every Caddy-derived image on the host, including the central proxy.
 # Reclaiming a little disk is not worth that, so cleanup is manual and opt-in.
-# See the README for a scoped cleanup command.
+# See docs/deploying.md for a scoped cleanup command.
 
 echo "==> Done. Deployed:"
 git --no-pager log -1 --oneline
