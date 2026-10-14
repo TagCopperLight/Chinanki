@@ -1,53 +1,57 @@
 # Chinanki
 
-A local-first web app for learning Mandarin vocabulary with spaced repetition.
-Each word becomes six cards: hanzi → meaning, hanzi → pinyin, meaning → pinyin,
-pinyin → meaning, and two writing cards (meaning → hanzi, pinyin → hanzi) where
-you draw the character. FSRS-4.5 schedules every card on its own.
+A small Anki-like web app for learning Mandarin vocabulary, made for phones.
 
-There is no account and no server-side data. Everything lives in your browser's
-IndexedDB, and the app installs as a PWA and works offline. Clearing site data
-deletes your collection, so use Settings → Export backup to keep a JSON copy,
-and Import backup to restore it.
+Each word you add becomes up to six flashcards:
 
-## Develop
+- hanzi → meaning
+- hanzi → pinyin
+- meaning → pinyin
+- pinyin → meaning
+- meaning → hanzi (you draw the character)
+- pinyin → hanzi (you draw the character)
 
-Prerequisites: Node.js and npm.
+Reviews are scheduled with FSRS. When adding a word, you get suggestions from a
+Chinese–English (CC-CEDICT) and Chinese–French (CFDICT) dictionary.
+
+There is no account and no backend. Your data lives in the browser (IndexedDB),
+and the app can be installed as a PWA and used offline. Clearing the site's data
+deletes everything, so use **Settings → Export backup** now and then.
+
+## Run locally
 
 ```sh
 npm install
 npm run dev
 ```
 
-Checks: `npm test`, `npm run test:e2e` (Playwright, against a production build),
-`npm run typecheck`, `npm run build`.
+`npm test` runs the tests and `npm run build` type-checks and builds.
 
-## Dictionary
-
-Auto-fill looks words up in CC-CEDICT (English) and CFDICT (French). Neither is
-committed. Download both and build the shards:
+Dictionary suggestions need the dictionary files, which are not in the repo.
+To build them locally:
 
 ```sh
-curl -L https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz \
-  | gunzip > /tmp/cedict.u8
-curl -L https://chine.in/mandarin/dictionnaire/CFDICT/cfdict.zip -o /tmp/cfdict.zip
-unzip -o -d /tmp /tmp/cfdict.zip
+curl -L https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz | gunzip > /tmp/cedict.u8
+curl -L https://chine.in/assets/cfdict/cfdict.u8 -o /tmp/cfdict.u8
 npm run build:dict -- /tmp/cedict.u8 /tmp/cfdict.u8
 ```
 
-The two are merged into one set of shards, so each entry has whichever languages
-are available for it. CC-CEDICT is licensed CC BY-SA 4.0 and CFDICT CC BY-SA 3.0.
+Without them the app still works, just without suggestions.
 
 ## Deploy
 
-The app ships as a stateless Docker container (Caddy serving the static build)
-behind a reverse proxy. The image build downloads the dictionaries itself.
+The Docker image downloads the dictionaries, builds the app and serves it with
+Caddy. `compose.yaml` attaches it to an existing external Docker network called
+`web`, where a reverse proxy routes to `chinanki:80`.
 
 ```sh
-./deploy.sh        # pull, rebuild, restart
-./rollback.sh      # go back to the previous image
-./smoke-image.sh   # build and check the image locally
+git pull
+docker compose up -d --build
 ```
 
-See the [deployment guide](docs/deploying.md) for first-time server setup,
-refreshing the dictionary, and cleaning up images.
+To fetch fresh dictionaries, rebuild without the cache:
+`docker compose build --no-cache && docker compose up -d`.
+
+## Licences
+
+CC-CEDICT is CC BY-SA 4.0 and CFDICT is CC BY-SA 3.0.
