@@ -11,8 +11,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { db } from '@/lib/db/db';
-import { listDecks } from '@/lib/db/decks';
+import { db } from '@/lib/db';
+import { listDecks } from '@/lib/db';
 import {
   buildForecast,
   buildHeatmap,

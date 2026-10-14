@@ -1,8 +1,8 @@
 import { Link, useNavigate, useParams } from 'react-router';
 import { Settings } from 'lucide-react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { getDeck } from '@/lib/db/decks';
-import { db } from '@/lib/db/db';
+import { getDeck } from '@/lib/db';
+import { db } from '@/lib/db';
 import { useDeckCounts } from '@/hooks/useDeckCounts';
 import Button from '@/components/Button';
 import PageHeader from '@/components/PageHeader';

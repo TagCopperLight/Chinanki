@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { deleteDeck, getDeck, updateDeck } from '@/lib/db/decks';
-import { ALL_DIRECTIONS, DIRECTION_LABELS } from '@/lib/db/types';
+import { deleteDeck, getDeck, updateDeck } from '@/lib/db';
+import { ALL_DIRECTIONS, DIRECTION_LABELS } from '@/lib/db';
 import Button from '@/components/Button';
 import Field, { inputClass } from '@/components/Field';
 import ImportExportPanel from '@/components/ImportExportPanel';
 import PageHeader from '@/components/PageHeader';
-import type { Direction } from '@/lib/db/types';
+import type { Direction } from '@/lib/db';
 
 const MIN_RETENTION = 0.7;
 const MAX_RETENTION = 0.98;

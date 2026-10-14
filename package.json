@@ -1,15 +1,13 @@
 {
   "name": "chinanki",
-  "version": "1.0.0",
-  "description": "Offline-first Mandarin vocabulary spaced-repetition PWA, backed entirely by browser IndexedDB.",
+  "private": true,
+  "description": "A small Anki-like app for learning Mandarin vocabulary.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json && vite build",
+    "build": "tsc && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
+    "typecheck": "tsc",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "test:e2e": "playwright test",
     "build:dict": "tsx scripts/build-dictionary.ts"
   },
   "type": "module",
@@ -23,7 +21,6 @@
     "recharts": "^3.10.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.0",
     "@testing-library/react": "^16.3.2",

@@ -2,9 +2,9 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router';
-import { db } from '@/lib/db/db';
-import { createDeck } from '@/lib/db/decks';
-import { createNote } from '@/lib/db/notes';
+import { db } from '@/lib/db';
+import { createDeck } from '@/lib/db';
+import { createNote } from '@/lib/db';
 import BrowsePage from '@/pages/BrowsePage';
 
 let deckId: number;

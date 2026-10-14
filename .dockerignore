@@ -3,9 +3,4 @@ dist
 public/dict
 .git
 .github
-docs
-test-results
-playwright-report
-coverage
 *.local
-.DS_Store

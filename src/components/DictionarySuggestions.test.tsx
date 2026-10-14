@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import DictionarySuggestions from '@/components/DictionarySuggestions';
-import { db } from '@/lib/db/db';
-import { saveSettings } from '@/lib/db/settings';
+import { db } from '@/lib/db';
+import { saveSettings } from '@/lib/db';
 import { clearDictionaryCache, setDictionaryFetch } from '@/lib/dictionary';
 
 const ENTRIES = [

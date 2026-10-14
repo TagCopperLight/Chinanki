@@ -18,12 +18,7 @@ export default defineConfig({
           {
             urlPattern: /\/dict\/.*\.json$/,
             handler: 'CacheFirst',
-            // Bump this name whenever the shard payload SHAPE changes (e.g.
-            // meanings: string[] -> { en?, fr? }). Workbox does not clear
-            // runtime caches on SW update, and with exactly 128 shards the
-            // maxEntries LRU cap never evicts, so a name bump is the only way
-            // to retire stale bodies from this cache layer. See lookup.ts's
-            // loadShard for the read-side hedge that covers the rest.
+            // Bump the name if the shard format changes: nothing else evicts it.
             options: { cacheName: 'chinanki-dict-v2', expiration: { maxEntries: 128 } },
           },
         ],
@@ -52,6 +47,5 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/vitest.setup.ts'],
-    exclude: ['**/node_modules/**', '**/dist/**', './e2e/**'],
   },
 });

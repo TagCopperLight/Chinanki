@@ -3,8 +3,7 @@
  *
  *   curl -L https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz \
  *     | gunzip > /tmp/cedict.u8
- *   curl -L https://chine.in/mandarin/dictionnaire/CFDICT/cfdict.zip -o /tmp/cfdict.zip
- *   unzip -o -d /tmp /tmp/cfdict.zip
+ *   curl -L https://chine.in/assets/cfdict/cfdict.u8 -o /tmp/cfdict.u8
  *   npm run build:dict -- /tmp/cedict.u8 /tmp/cfdict.u8
  *
  * CC-CEDICT is CC BY-SA 4.0 and CFDICT is CC BY-SA 3.0; both attributions live
@@ -12,10 +11,10 @@
  */
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { mergeDictionaries } from '../src/lib/dictionary/merge';
-import { parseCedictLine } from '../src/lib/dictionary/parse';
-import { shardKeyFor } from '../src/lib/dictionary/shard';
-import type { DictEntry, ParsedEntry } from '../src/lib/dictionary/types';
+import { mergeDictionaries } from '../src/lib/dictionary';
+import { parseCedictLine } from '../src/lib/dictionary';
+import { shardKeyFor } from '../src/lib/dictionary';
+import type { DictEntry, ParsedEntry } from '../src/lib/dictionary';
 
 /**
  * A CFDICT download that got truncated, redirected to an error page, or

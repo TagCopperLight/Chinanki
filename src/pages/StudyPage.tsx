@@ -2,10 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { X } from 'lucide-react';
 import { StudySession } from '@/lib/study';
-import { answerFor, isWritingDirection, promptFor, type NoteField } from '@/lib/study/prompt';
-import { drawableCharacters } from '@/lib/writing/characters';
-import type { Stroke } from '@/lib/writing/strokes';
-import { DIRECTION_LABELS } from '@/lib/db/types';
+import { answerFor, isWritingDirection, promptFor, type NoteField } from '@/lib/study';
+import { drawableCharacters } from '@/lib/writing';
+import type { Stroke } from '@/lib/writing';
+import { DIRECTION_LABELS } from '@/lib/db';
 import type { Rating } from '@/lib/fsrs';
 import type { QueueItem } from '@/lib/study';
 import Button from '@/components/Button';
@@ -61,11 +61,7 @@ export default function StudyPage() {
   const [tick, setTick] = useState(0);
   const [error, setError] = useState('');
   const shownAt = useRef(Date.now());
-  // rate() is async and awaits an IndexedDB write before resetting `revealed`.
-  // Without this flag, a held key's repeat events (or a fast double click)
-  // can all observe stale state and each call rate(), logging duplicate
-  // reviews for one card. This guards the answering path itself, since state
-  // updates alone are too slow to prevent overlapping invocations.
+  // Guards against a double click logging two reviews while rate() awaits the DB.
   const answering = useRef(false);
 
   useEffect(() => {
@@ -118,13 +114,8 @@ export default function StudyPage() {
   const characters = writing && item ? drawableCharacters(item.note.hanzi, item.note.pinyin) : [];
   const moreCharacters = writing && charIndex < characters.length - 1;
 
-  // Keyboard shortcuts make desktop review fast; the buttons stay the mobile
-  // path. Scope: this global listener only acts when focus is NOT on an
-  // interactive control (button/link/input/textarea/select). When a rating
-  // button, Close, or Undo is focused, native activation (click) must win so
-  // Enter/Space triggers *that* control instead of being hijacked into
-  // rate(3) via preventDefault(). Auto-repeat is also ignored (event.repeat)
-  // so holding a key can't fire rate() more than once.
+  // Desktop shortcuts. Ignored while a control is focused so Enter/Space
+  // activates that control instead.
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.repeat) return;
@@ -145,10 +136,7 @@ export default function StudyPage() {
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-    // characters.length is read in onKey but deliberately left out of this
-    // array: it only changes when the card changes, and every card change
-    // also flips revealed or moreCharacters, which already forces onKey to
-    // be re-registered with the new value in its closure.
+    // characters.length is omitted: it only changes along with revealed/moreCharacters.
   }, [revealed, rate, moreCharacters]);
 
   if (error) {

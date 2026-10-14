@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useCallback } from 'react';
-import { DEFAULT_SETTINGS, getSettings, saveSettings } from '@/lib/db/settings';
-import type { AppSettings } from '@/lib/db/types';
+import { DEFAULT_SETTINGS, getSettings, saveSettings } from '@/lib/db';
+import type { AppSettings } from '@/lib/db';
 
 /** Live app settings. Falls back to the defaults on the first render. */
 export function useSettings(): {

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import WritingPrompt from '@/components/WritingPrompt';
-import type { Stroke } from '@/lib/writing/strokes';
+import type { Stroke } from '@/lib/writing';
 
 const ONE_STROKE: Stroke[] = [[{ x: 0.2, y: 0.2 }, { x: 0.8, y: 0.8 }]];
 

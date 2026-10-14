@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { db } from '@/lib/db/db';
-import { saveSettings } from '@/lib/db/settings';
+import { db } from '@/lib/db';
+import { saveSettings } from '@/lib/db';
 import HanziText from '@/components/HanziText';
 
 beforeEach(async () => {

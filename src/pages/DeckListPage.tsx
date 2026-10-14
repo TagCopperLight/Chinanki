@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { createDeck, listDecks } from '@/lib/db/decks';
+import { createDeck, listDecks } from '@/lib/db';
 import { useDeckCounts } from '@/hooks/useDeckCounts';
 import Button from '@/components/Button';
 import EmptyState from '@/components/EmptyState';
 import Field, { inputClass } from '@/components/Field';
 import PageHeader from '@/components/PageHeader';
-import type { Deck } from '@/lib/db/types';
+import type { Deck } from '@/lib/db';
 
 function DeckRow({ deck }: { deck: Deck }) {
   const counts = useDeckCounts(deck.id);

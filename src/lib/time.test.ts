@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, endOfStudyDay, formatInterval, startOfStudyDay, studyDayKey } from '@/lib/time';
+import { formatInterval, startOfStudyDay, studyDayKey } from '@/lib/time';
 
 /** Local-time constructor so these assertions hold in any timezone. */
 function local(y: number, m: number, d: number, h = 0, min = 0): number {
@@ -24,13 +24,6 @@ describe('startOfStudyDay', () => {
   });
 });
 
-describe('endOfStudyDay', () => {
-  it('is exactly one day after the start', () => {
-    const t = local(2026, 3, 10, 13, 30);
-    expect(endOfStudyDay(t, 4) - startOfStudyDay(t, 4)).toBe(86_400_000);
-  });
-});
-
 describe('studyDayKey', () => {
   it('labels a 2am session with the previous calendar date', () => {
     expect(studyDayKey(local(2026, 3, 10, 2, 15), 4)).toBe('2026-03-09');
@@ -38,12 +31,6 @@ describe('studyDayKey', () => {
 
   it('zero-pads month and day', () => {
     expect(studyDayKey(local(2026, 1, 5, 12), 4)).toBe('2026-01-05');
-  });
-});
-
-describe('addDays', () => {
-  it('adds whole days in milliseconds', () => {
-    expect(addDays(0, 3)).toBe(3 * 86_400_000);
   });
 });
 

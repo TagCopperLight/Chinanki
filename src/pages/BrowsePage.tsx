@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '@/lib/db/db';
-import { resetCard, setCardSuspended } from '@/lib/db/cards';
-import { DIRECTION_LABELS } from '@/lib/db/types';
+import { db } from '@/lib/db';
+import { resetCard, setCardSuspended } from '@/lib/db';
+import { DIRECTION_LABELS } from '@/lib/db';
 import { formatInterval } from '@/lib/time';
 import Button from '@/components/Button';
 import EmptyState from '@/components/EmptyState';
@@ -11,7 +11,7 @@ import HanziText from '@/components/HanziText';
 import PageHeader from '@/components/PageHeader';
 import PinyinText from '@/components/PinyinText';
 import { inputClass } from '@/components/Field';
-import type { Note } from '@/lib/db/types';
+import type { Note } from '@/lib/db';
 
 function CardRows({ note }: { note: Note }) {
   const cards = useLiveQuery(() => db.cards.where('noteId').equals(note.id!).toArray(), [note.id], []);

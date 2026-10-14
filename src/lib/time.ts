@@ -1,5 +1,3 @@
-export const MINUTE_MS = 60_000;
-export const HOUR_MS = 3_600_000;
 export const DAY_MS = 86_400_000;
 
 /**
@@ -16,20 +14,12 @@ export function startOfStudyDay(timestamp: number, rolloverHour: number): number
   return date.getTime();
 }
 
-export function endOfStudyDay(timestamp: number, rolloverHour: number): number {
-  return startOfStudyDay(timestamp, rolloverHour) + DAY_MS;
-}
-
 /** Stable `YYYY-MM-DD` key for the study day, used to bucket reviews. */
 export function studyDayKey(timestamp: number, rolloverHour: number): string {
   const date = new Date(startOfStudyDay(timestamp, rolloverHour));
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${date.getFullYear()}-${month}-${day}`;
-}
-
-export function addDays(timestamp: number, days: number): number {
-  return timestamp + days * DAY_MS;
 }
 
 /** Human-readable interval for the rating buttons, e.g. "10m", "3d", "2.5mo". */
