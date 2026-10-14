@@ -5,7 +5,7 @@ import {
   normalise,
   strokePath,
   type Stroke,
-} from '@/lib/writing/strokes';
+} from '@/lib/writing';
 
 /** How faint the correct character sits behind the learner's own strokes. */
 const GHOST_ALPHA = 0.3;

@@ -1,9 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { db } from '@/lib/db/db';
+import { db } from '@/lib/db';
 import WritingAnswer from '@/components/WritingAnswer';
-import { drawableCharacters } from '@/lib/writing/characters';
+import { drawableCharacters } from '@/lib/writing';
 
 beforeEach(async () => {
   await db.delete();

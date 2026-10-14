@@ -2,11 +2,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router';
-import { db } from '@/lib/db/db';
-import { createDeck } from '@/lib/db/decks';
-import { getSettings } from '@/lib/db/settings';
+import { db } from '@/lib/db';
+import { createDeck } from '@/lib/db';
+import { getSettings } from '@/lib/db';
 import { exportBackup } from '@/lib/io';
-import * as backupModule from '@/lib/io/backup';
+import * as backupModule from '@/lib/io';
 import SettingsPage from '@/pages/SettingsPage';
 
 beforeEach(async () => {

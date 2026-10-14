@@ -1,8 +1,46 @@
-import { useEffect } from 'react';
-import { BrowserRouter, useLocation } from 'react-router';
-import AppRoutes from '@/routes';
+import { lazy, Suspense, useEffect } from 'react';
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router';
+import BrowsePage from '@/pages/BrowsePage';
+import DeckListPage from '@/pages/DeckListPage';
+import DeckPage from '@/pages/DeckPage';
+import DeckSettingsPage from '@/pages/DeckSettingsPage';
+import NoteEditorPage from '@/pages/NoteEditorPage';
+import SettingsPage from '@/pages/SettingsPage';
+import StudyPage from '@/pages/StudyPage';
+import EmptyState from '@/components/EmptyState';
 import NavBar from '@/components/NavBar';
 import { useSettings } from '@/hooks/useSettings';
+
+// Recharts is heavy and only used on the Statistics page, so load it lazily.
+const StatsPage = lazy(() => import('@/pages/StatsPage'));
+
+function StatsFallback() {
+  return <div className="p-3 text-sm text-slate-500 dark:text-slate-400">Loading statistics…</div>;
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<DeckListPage />} />
+      <Route path="/deck/:deckId" element={<DeckPage />} />
+      <Route path="/deck/:deckId/settings" element={<DeckSettingsPage />} />
+      <Route path="/deck/:deckId/study" element={<StudyPage />} />
+      <Route path="/deck/:deckId/browse" element={<BrowsePage />} />
+      <Route path="/deck/:deckId/note/new" element={<NoteEditorPage />} />
+      <Route path="/note/:noteId" element={<NoteEditorPage />} />
+      <Route
+        path="/stats"
+        element={
+          <Suspense fallback={<StatsFallback />}>
+            <StatsPage />
+          </Suspense>
+        }
+      />
+      <Route path="/settings" element={<SettingsPage />} />
+      <Route path="*" element={<EmptyState title="Page not found" />} />
+    </Routes>
+  );
+}
 
 /** Applies the stored theme to <html> so Tailwind's dark: variants respond. */
 function ThemeEffect() {

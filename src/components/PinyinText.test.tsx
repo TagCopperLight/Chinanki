@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { db } from '@/lib/db/db';
+import { db } from '@/lib/db';
 import PinyinText from '@/components/PinyinText';
 
 beforeEach(async () => {

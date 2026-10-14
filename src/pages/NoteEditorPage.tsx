@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { createNote, deleteNote, getNote, updateNote } from '@/lib/db/notes';
+import { createNote, deleteNote, getNote, updateNote } from '@/lib/db';
 import Button from '@/components/Button';
 import DictionarySuggestions from '@/components/DictionarySuggestions';
 import EmptyState from '@/components/EmptyState';

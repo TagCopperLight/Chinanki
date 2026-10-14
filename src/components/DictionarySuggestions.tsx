@@ -41,10 +41,7 @@ export default function DictionarySuggestions({
         const gloss = glossesFor(entry, settings.suggestionLanguage);
         const meaning = gloss.meanings.join('; ');
         return (
-          // `simplified|pinyin` is better than `simplified` alone but still not
-          // guaranteed unique: CC-CEDICT can carry multiple traditional forms
-          // for the same simplified/pinyin pair (e.g. 檯/臺/颱 all map to
-          // simplified 台, pinyin tái), and those collapse to one key here.
+          // Not unique on its own: 檯/臺/颱 all share simplified 台 and pinyin tái.
           <li key={`${entry.simplified}|${entry.pinyin}`}>
             <button
               type="button"
@@ -56,10 +53,7 @@ export default function DictionarySuggestions({
               <span className="flex-1 truncate text-sm text-slate-500">{meaning}</span>
               {gloss.language !== settings.suggestionLanguage && (
                 <span
-                  // role="img": a bare span has the implicit `generic` role, which ARIA 1.2
-                  // prohibits naming — browsers may ignore aria-label on it when computing
-                  // the ancestor button's accessible name. `img` permits naming, so don't
-                  // remove this thinking it's redundant.
+                  // role="img" so the aria-label counts; a bare span cannot be named.
                   role="img"
                   className="rounded bg-slate-100 px-1 text-xs uppercase text-slate-500 dark:bg-slate-700 dark:text-slate-400"
                   aria-label={`shown in ${LANGUAGE_NAMES[gloss.language]}`}

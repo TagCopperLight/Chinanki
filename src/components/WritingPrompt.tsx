@@ -1,6 +1,6 @@
 import Button from '@/components/Button';
 import DrawingCanvas from '@/components/DrawingCanvas';
-import { isEmpty, undoLastStroke, type Stroke } from '@/lib/writing/strokes';
+import { isEmpty, undoLastStroke, type Stroke } from '@/lib/writing';
 
 /**
  * The drawing box for one character of the answer. Deliberately blank — the

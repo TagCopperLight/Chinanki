@@ -2,9 +2,9 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { MemoryRouter } from 'react-router';
-import { db } from '@/lib/db/db';
-import { createDeck } from '@/lib/db/decks';
-import { createNote } from '@/lib/db/notes';
+import { db } from '@/lib/db';
+import { createDeck } from '@/lib/db';
+import { createNote } from '@/lib/db';
 import DeckListPage from '@/pages/DeckListPage';
 
 beforeEach(async () => {

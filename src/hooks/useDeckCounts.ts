@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '@/lib/db/db';
+import { db } from '@/lib/db';
 import { deckCounts, type DeckCounts } from '@/lib/study';
 
 const ZERO: DeckCounts = { new: 0, learning: 0, review: 0 };

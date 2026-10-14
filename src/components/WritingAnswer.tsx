@@ -1,8 +1,8 @@
 import { Eye, EyeOff } from 'lucide-react';
 import DrawingCanvas from '@/components/DrawingCanvas';
 import { useSettings } from '@/hooks/useSettings';
-import type { DrawableCharacter } from '@/lib/writing/characters';
-import type { Stroke } from '@/lib/writing/strokes';
+import type { DrawableCharacter } from '@/lib/writing';
+import type { Stroke } from '@/lib/writing';
 
 /**
  * The reveal: each drawing with the correct character ghosted behind it. The
